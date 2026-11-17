@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "a6cea639c1ca9b4834ba",
   "position": {
     "x": 280,
     "y": 16,
-    "width": 1000,
-    "height": 104,
     "z": 11000,
+    "height": 104,
+    "width": 1000,
     "tabOrder": 11000
   },
   "visual": {
@@ -210,5 +210,65 @@
         }
       ]
     }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f6446baf240a30a0e0a1",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Revenue"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "d5e033d68855d580aac3",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Expenses"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "dfed836f64ec0accb96e",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Net Income"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "67db7d9d091590dd6970",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Net Margin %"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
   }
 }

@@ -267,6 +267,365 @@ table _Measures
 		displayFolder: Formatting
 		lineageTag: 28b9a180-0f8a-4274-9182-fc0a674b210f
 
+	/// SVG KPI card (value, 12-month sparkline, MoM and vs monthly average) for Revenue.
+	measure 'Revenue SVG Card' =
+			VAR _val = [Revenue]
+			VAR _end = CALCULATE(MAX('Date'[Date]), Transactions)
+			VAR _months =
+				ADDCOLUMNS(
+					CALCULATETABLE(VALUES('Date'[Year Month Number]), DATESINPERIOD('Date'[Date], _end, -12, MONTH)),
+					"@v", VAR _ym = 'Date'[Year Month Number] RETURN CALCULATE([Revenue], REMOVEFILTERS('Date'), 'Date'[Year Month Number] = _ym)
+				)
+			VAR _t = FILTER(_months, NOT ISBLANK([@v]))
+			VAR _n = COUNTROWS(_t)
+			VAR _min = MINX(_t, [@v])
+			VAR _max = MAXX(_t, [@v])
+			VAR _rng = IF(_max = _min, 1, _max - _min)
+			VAR _pts =
+				ADDCOLUMNS(_t,
+					"@x", ROUND(20 + (RANKX(_t, 'Date'[Year Month Number], , ASC) - 1) * 260 / MAX(_n - 1, 1), 0),
+					"@y", ROUND(138 - ([@v] - _min) / _rng * 44, 0))
+			VAR _line = CONCATENATEX(_pts, [@x] & "," & [@y], " ", 'Date'[Year Month Number], ASC)
+			VAR _lastX = MAXX(_pts, [@x])
+			VAR _lastYM = MAXX(_t, 'Date'[Year Month Number])
+			VAR _prevYM = MAXX(FILTER(_t, 'Date'[Year Month Number] < _lastYM), 'Date'[Year Month Number])
+			VAR _last = MAXX(FILTER(_t, 'Date'[Year Month Number] = _lastYM), [@v])
+			VAR _prev = MAXX(FILTER(_t, 'Date'[Year Month Number] = _prevYM), [@v])
+			VAR _avg = AVERAGEX(_t, [@v])
+			VAR _d1 = IF(NOT ISBLANK(_prev), DIVIDE(_last - _prev, ABS(_prev)))
+			VAR _d2 = IF(_n > 1, DIVIDE(_last - _avg, ABS(_avg)))
+			VAR _valTxt = IF(_val < 0, "-", "") & "$" & IF(ABS(ABS(_val)) >= 1000000, FORMAT(ABS(_val) / 1000000, "#,0.0") & "M", IF(ABS(ABS(_val)) >= 1000, FORMAT(ABS(_val) / 1000, "#,0.0") & "K", FORMAT(ABS(_val), "#,0")))
+			VAR _c166 = IF(_d1 >= 0, "#1E9E4A", "#D13438")
+			VAR _a166 = IF(_d1 >= 0, "<polygon points='212,165 217,156 222,165' fill='" & _c166 & "'/>", "<polygon points='212,156 217,165 222,156' fill='" & _c166 & "'/>")
+			VAR _r166 = "<text x='64' y='166' font-family='Segoe UI' font-size='13' fill='#3A3A48'>MoM</text>" &
+				IF(ISBLANK(_d1), "<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c166 & "'>" & FORMAT(ABS(_d1), "0.0%") & "</text>" & _a166)
+			VAR _c188 = IF(_d2 >= 0, "#1E9E4A", "#D13438")
+			VAR _a188 = IF(_d2 >= 0, "<polygon points='212,187 217,178 222,187' fill='" & _c188 & "'/>", "<polygon points='212,178 217,187 222,178' fill='" & _c188 & "'/>")
+			VAR _r188 = "<text x='64' y='188' font-family='Segoe UI' font-size='13' fill='#3A3A48'>vs Avg</text>" &
+				IF(ISBLANK(_d2), "<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c188 & "'>" & FORMAT(ABS(_d2), "0.0%") & "</text>" & _a188)
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'>" &
+				"<text x='20' y='36' font-family='Segoe UI' font-size='16' font-weight='600' fill='#4A4A5A'>Revenue</text>" &
+				"<text x='20' y='76' font-family='Segoe UI' font-size='32' font-weight='700' fill='#14141F'>" & _valTxt & "</text>" &
+				IF(_n > 1,
+					"<path d='M20,140 L" & _line & " L" & _lastX & ",140 Z' fill='#D6338A' fill-opacity='0.22'/>" &
+					"<polyline points='" & _line & "' fill='none' stroke='#D6338A' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/>") &
+				_r166 & _r188 &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_val), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: 1dc31936-f1bf-443a-8d5c-8832ee5ad57f
+
+	/// SVG KPI card (value, 12-month sparkline, MoM and vs monthly average) for Expenses.
+	measure 'Expenses SVG Card' =
+			VAR _val = [Expenses]
+			VAR _end = CALCULATE(MAX('Date'[Date]), Transactions)
+			VAR _months =
+				ADDCOLUMNS(
+					CALCULATETABLE(VALUES('Date'[Year Month Number]), DATESINPERIOD('Date'[Date], _end, -12, MONTH)),
+					"@v", VAR _ym = 'Date'[Year Month Number] RETURN CALCULATE([Expenses], REMOVEFILTERS('Date'), 'Date'[Year Month Number] = _ym)
+				)
+			VAR _t = FILTER(_months, NOT ISBLANK([@v]))
+			VAR _n = COUNTROWS(_t)
+			VAR _min = MINX(_t, [@v])
+			VAR _max = MAXX(_t, [@v])
+			VAR _rng = IF(_max = _min, 1, _max - _min)
+			VAR _pts =
+				ADDCOLUMNS(_t,
+					"@x", ROUND(20 + (RANKX(_t, 'Date'[Year Month Number], , ASC) - 1) * 260 / MAX(_n - 1, 1), 0),
+					"@y", ROUND(138 - ([@v] - _min) / _rng * 44, 0))
+			VAR _line = CONCATENATEX(_pts, [@x] & "," & [@y], " ", 'Date'[Year Month Number], ASC)
+			VAR _lastX = MAXX(_pts, [@x])
+			VAR _lastYM = MAXX(_t, 'Date'[Year Month Number])
+			VAR _prevYM = MAXX(FILTER(_t, 'Date'[Year Month Number] < _lastYM), 'Date'[Year Month Number])
+			VAR _last = MAXX(FILTER(_t, 'Date'[Year Month Number] = _lastYM), [@v])
+			VAR _prev = MAXX(FILTER(_t, 'Date'[Year Month Number] = _prevYM), [@v])
+			VAR _avg = AVERAGEX(_t, [@v])
+			VAR _d1 = IF(NOT ISBLANK(_prev), DIVIDE(_last - _prev, ABS(_prev)))
+			VAR _d2 = IF(_n > 1, DIVIDE(_last - _avg, ABS(_avg)))
+			VAR _valTxt = IF(_val < 0, "-", "") & "$" & IF(ABS(ABS(_val)) >= 1000000, FORMAT(ABS(_val) / 1000000, "#,0.0") & "M", IF(ABS(ABS(_val)) >= 1000, FORMAT(ABS(_val) / 1000, "#,0.0") & "K", FORMAT(ABS(_val), "#,0")))
+			VAR _c166 = IF(_d1 <= 0, "#1E9E4A", "#D13438")
+			VAR _a166 = IF(_d1 >= 0, "<polygon points='212,165 217,156 222,165' fill='" & _c166 & "'/>", "<polygon points='212,156 217,165 222,156' fill='" & _c166 & "'/>")
+			VAR _r166 = "<text x='64' y='166' font-family='Segoe UI' font-size='13' fill='#3A3A48'>MoM</text>" &
+				IF(ISBLANK(_d1), "<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c166 & "'>" & FORMAT(ABS(_d1), "0.0%") & "</text>" & _a166)
+			VAR _c188 = IF(_d2 <= 0, "#1E9E4A", "#D13438")
+			VAR _a188 = IF(_d2 >= 0, "<polygon points='212,187 217,178 222,187' fill='" & _c188 & "'/>", "<polygon points='212,178 217,187 222,178' fill='" & _c188 & "'/>")
+			VAR _r188 = "<text x='64' y='188' font-family='Segoe UI' font-size='13' fill='#3A3A48'>vs Avg</text>" &
+				IF(ISBLANK(_d2), "<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c188 & "'>" & FORMAT(ABS(_d2), "0.0%") & "</text>" & _a188)
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'>" &
+				"<text x='20' y='36' font-family='Segoe UI' font-size='16' font-weight='600' fill='#4A4A5A'>Expenses</text>" &
+				"<text x='20' y='76' font-family='Segoe UI' font-size='32' font-weight='700' fill='#14141F'>" & _valTxt & "</text>" &
+				IF(_n > 1,
+					"<path d='M20,140 L" & _line & " L" & _lastX & ",140 Z' fill='#E8710A' fill-opacity='0.22'/>" &
+					"<polyline points='" & _line & "' fill='none' stroke='#E8710A' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/>") &
+				_r166 & _r188 &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_val), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: cd7f30b0-68ba-4a68-80c4-ba3d7e65f72b
+
+	/// SVG KPI card (value, 12-month sparkline, MoM and vs monthly average) for Net Income.
+	measure 'Net Income SVG Card' =
+			VAR _val = [Net Income]
+			VAR _end = CALCULATE(MAX('Date'[Date]), Transactions)
+			VAR _months =
+				ADDCOLUMNS(
+					CALCULATETABLE(VALUES('Date'[Year Month Number]), DATESINPERIOD('Date'[Date], _end, -12, MONTH)),
+					"@v", VAR _ym = 'Date'[Year Month Number] RETURN CALCULATE([Net Income], REMOVEFILTERS('Date'), 'Date'[Year Month Number] = _ym)
+				)
+			VAR _t = FILTER(_months, NOT ISBLANK([@v]))
+			VAR _n = COUNTROWS(_t)
+			VAR _min = MINX(_t, [@v])
+			VAR _max = MAXX(_t, [@v])
+			VAR _rng = IF(_max = _min, 1, _max - _min)
+			VAR _pts =
+				ADDCOLUMNS(_t,
+					"@x", ROUND(20 + (RANKX(_t, 'Date'[Year Month Number], , ASC) - 1) * 260 / MAX(_n - 1, 1), 0),
+					"@y", ROUND(138 - ([@v] - _min) / _rng * 44, 0))
+			VAR _line = CONCATENATEX(_pts, [@x] & "," & [@y], " ", 'Date'[Year Month Number], ASC)
+			VAR _lastX = MAXX(_pts, [@x])
+			VAR _lastYM = MAXX(_t, 'Date'[Year Month Number])
+			VAR _prevYM = MAXX(FILTER(_t, 'Date'[Year Month Number] < _lastYM), 'Date'[Year Month Number])
+			VAR _last = MAXX(FILTER(_t, 'Date'[Year Month Number] = _lastYM), [@v])
+			VAR _prev = MAXX(FILTER(_t, 'Date'[Year Month Number] = _prevYM), [@v])
+			VAR _avg = AVERAGEX(_t, [@v])
+			VAR _d1 = IF(NOT ISBLANK(_prev), DIVIDE(_last - _prev, ABS(_prev)))
+			VAR _d2 = IF(_n > 1, DIVIDE(_last - _avg, ABS(_avg)))
+			VAR _valTxt = IF(_val < 0, "-", "") & "$" & IF(ABS(ABS(_val)) >= 1000000, FORMAT(ABS(_val) / 1000000, "#,0.0") & "M", IF(ABS(ABS(_val)) >= 1000, FORMAT(ABS(_val) / 1000, "#,0.0") & "K", FORMAT(ABS(_val), "#,0")))
+			VAR _c166 = IF(_d1 >= 0, "#1E9E4A", "#D13438")
+			VAR _a166 = IF(_d1 >= 0, "<polygon points='212,165 217,156 222,165' fill='" & _c166 & "'/>", "<polygon points='212,156 217,165 222,156' fill='" & _c166 & "'/>")
+			VAR _r166 = "<text x='64' y='166' font-family='Segoe UI' font-size='13' fill='#3A3A48'>MoM</text>" &
+				IF(ISBLANK(_d1), "<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c166 & "'>" & FORMAT(ABS(_d1), "0.0%") & "</text>" & _a166)
+			VAR _c188 = IF(_d2 >= 0, "#1E9E4A", "#D13438")
+			VAR _a188 = IF(_d2 >= 0, "<polygon points='212,187 217,178 222,187' fill='" & _c188 & "'/>", "<polygon points='212,178 217,187 222,178' fill='" & _c188 & "'/>")
+			VAR _r188 = "<text x='64' y='188' font-family='Segoe UI' font-size='13' fill='#3A3A48'>vs Avg</text>" &
+				IF(ISBLANK(_d2), "<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c188 & "'>" & FORMAT(ABS(_d2), "0.0%") & "</text>" & _a188)
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'>" &
+				"<text x='20' y='36' font-family='Segoe UI' font-size='16' font-weight='600' fill='#4A4A5A'>Net Income</text>" &
+				"<text x='20' y='76' font-family='Segoe UI' font-size='32' font-weight='700' fill='#14141F'>" & _valTxt & "</text>" &
+				IF(_n > 1,
+					"<path d='M20,140 L" & _line & " L" & _lastX & ",140 Z' fill='#7B3FD0' fill-opacity='0.22'/>" &
+					"<polyline points='" & _line & "' fill='none' stroke='#7B3FD0' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/>") &
+				_r166 & _r188 &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_val), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: b874e0b1-ba8e-4006-b105-cb3758513bbe
+
+	/// SVG KPI card (value, 12-month sparkline, MoM and vs monthly average) for Net Margin %.
+	measure 'Net Margin % SVG Card' =
+			VAR _val = [Net Margin %]
+			VAR _end = CALCULATE(MAX('Date'[Date]), Transactions)
+			VAR _months =
+				ADDCOLUMNS(
+					CALCULATETABLE(VALUES('Date'[Year Month Number]), DATESINPERIOD('Date'[Date], _end, -12, MONTH)),
+					"@v", VAR _ym = 'Date'[Year Month Number] RETURN CALCULATE([Net Margin %], REMOVEFILTERS('Date'), 'Date'[Year Month Number] = _ym)
+				)
+			VAR _t = FILTER(_months, NOT ISBLANK([@v]))
+			VAR _n = COUNTROWS(_t)
+			VAR _min = MINX(_t, [@v])
+			VAR _max = MAXX(_t, [@v])
+			VAR _rng = IF(_max = _min, 1, _max - _min)
+			VAR _pts =
+				ADDCOLUMNS(_t,
+					"@x", ROUND(20 + (RANKX(_t, 'Date'[Year Month Number], , ASC) - 1) * 260 / MAX(_n - 1, 1), 0),
+					"@y", ROUND(138 - ([@v] - _min) / _rng * 44, 0))
+			VAR _line = CONCATENATEX(_pts, [@x] & "," & [@y], " ", 'Date'[Year Month Number], ASC)
+			VAR _lastX = MAXX(_pts, [@x])
+			VAR _lastYM = MAXX(_t, 'Date'[Year Month Number])
+			VAR _prevYM = MAXX(FILTER(_t, 'Date'[Year Month Number] < _lastYM), 'Date'[Year Month Number])
+			VAR _last = MAXX(FILTER(_t, 'Date'[Year Month Number] = _lastYM), [@v])
+			VAR _prev = MAXX(FILTER(_t, 'Date'[Year Month Number] = _prevYM), [@v])
+			VAR _avg = AVERAGEX(_t, [@v])
+			VAR _d1 = IF(NOT ISBLANK(_prev), _last - _prev)
+			VAR _d2 = IF(_n > 1, _last - _avg)
+			VAR _valTxt = FORMAT(_val, "0.0%")
+			VAR _c166 = IF(_d1 >= 0, "#1E9E4A", "#D13438")
+			VAR _a166 = IF(_d1 >= 0, "<polygon points='212,165 217,156 222,165' fill='" & _c166 & "'/>", "<polygon points='212,156 217,165 222,156' fill='" & _c166 & "'/>")
+			VAR _r166 = "<text x='64' y='166' font-family='Segoe UI' font-size='13' fill='#3A3A48'>MoM</text>" &
+				IF(ISBLANK(_d1), "<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c166 & "'>" & FORMAT(ABS(_d1) * 100, "0.0") & " pp" & "</text>" & _a166)
+			VAR _c188 = IF(_d2 >= 0, "#1E9E4A", "#D13438")
+			VAR _a188 = IF(_d2 >= 0, "<polygon points='212,187 217,178 222,187' fill='" & _c188 & "'/>", "<polygon points='212,178 217,187 222,178' fill='" & _c188 & "'/>")
+			VAR _r188 = "<text x='64' y='188' font-family='Segoe UI' font-size='13' fill='#3A3A48'>vs Avg</text>" &
+				IF(ISBLANK(_d2), "<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c188 & "'>" & FORMAT(ABS(_d2) * 100, "0.0") & " pp" & "</text>" & _a188)
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'>" &
+				"<text x='20' y='36' font-family='Segoe UI' font-size='16' font-weight='600' fill='#4A4A5A'>Net Margin %</text>" &
+				"<text x='20' y='76' font-family='Segoe UI' font-size='32' font-weight='700' fill='#14141F'>" & _valTxt & "</text>" &
+				IF(_n > 1,
+					"<path d='M20,140 L" & _line & " L" & _lastX & ",140 Z' fill='#2F6FDB' fill-opacity='0.22'/>" &
+					"<polyline points='" & _line & "' fill='none' stroke='#2F6FDB' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/>") &
+				_r166 & _r188 &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_val), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: f0d47a9e-c258-448b-b328-379183c57a20
+
+	/// SVG KPI card (value, 12-month sparkline, MoM and vs monthly average) for Transactions.
+	measure 'Transactions SVG Card' =
+			VAR _val = [Transactions]
+			VAR _end = CALCULATE(MAX('Date'[Date]), Transactions)
+			VAR _months =
+				ADDCOLUMNS(
+					CALCULATETABLE(VALUES('Date'[Year Month Number]), DATESINPERIOD('Date'[Date], _end, -12, MONTH)),
+					"@v", VAR _ym = 'Date'[Year Month Number] RETURN CALCULATE([Transactions], REMOVEFILTERS('Date'), 'Date'[Year Month Number] = _ym)
+				)
+			VAR _t = FILTER(_months, NOT ISBLANK([@v]))
+			VAR _n = COUNTROWS(_t)
+			VAR _min = MINX(_t, [@v])
+			VAR _max = MAXX(_t, [@v])
+			VAR _rng = IF(_max = _min, 1, _max - _min)
+			VAR _pts =
+				ADDCOLUMNS(_t,
+					"@x", ROUND(20 + (RANKX(_t, 'Date'[Year Month Number], , ASC) - 1) * 260 / MAX(_n - 1, 1), 0),
+					"@y", ROUND(138 - ([@v] - _min) / _rng * 44, 0))
+			VAR _line = CONCATENATEX(_pts, [@x] & "," & [@y], " ", 'Date'[Year Month Number], ASC)
+			VAR _lastX = MAXX(_pts, [@x])
+			VAR _lastYM = MAXX(_t, 'Date'[Year Month Number])
+			VAR _prevYM = MAXX(FILTER(_t, 'Date'[Year Month Number] < _lastYM), 'Date'[Year Month Number])
+			VAR _last = MAXX(FILTER(_t, 'Date'[Year Month Number] = _lastYM), [@v])
+			VAR _prev = MAXX(FILTER(_t, 'Date'[Year Month Number] = _prevYM), [@v])
+			VAR _avg = AVERAGEX(_t, [@v])
+			VAR _d1 = IF(NOT ISBLANK(_prev), DIVIDE(_last - _prev, ABS(_prev)))
+			VAR _d2 = IF(_n > 1, DIVIDE(_last - _avg, ABS(_avg)))
+			VAR _valTxt = IF(ABS(_val) >= 1000000, FORMAT(_val / 1000000, "#,0.0") & "M", IF(ABS(_val) >= 1000, FORMAT(_val / 1000, "#,0.0") & "K", FORMAT(_val, "#,0")))
+			VAR _c166 = IF(_d1 >= 0, "#1E9E4A", "#D13438")
+			VAR _a166 = IF(_d1 >= 0, "<polygon points='212,165 217,156 222,165' fill='" & _c166 & "'/>", "<polygon points='212,156 217,165 222,156' fill='" & _c166 & "'/>")
+			VAR _r166 = "<text x='64' y='166' font-family='Segoe UI' font-size='13' fill='#3A3A48'>MoM</text>" &
+				IF(ISBLANK(_d1), "<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c166 & "'>" & FORMAT(ABS(_d1), "0.0%") & "</text>" & _a166)
+			VAR _c188 = IF(_d2 >= 0, "#1E9E4A", "#D13438")
+			VAR _a188 = IF(_d2 >= 0, "<polygon points='212,187 217,178 222,187' fill='" & _c188 & "'/>", "<polygon points='212,178 217,187 222,178' fill='" & _c188 & "'/>")
+			VAR _r188 = "<text x='64' y='188' font-family='Segoe UI' font-size='13' fill='#3A3A48'>vs Avg</text>" &
+				IF(ISBLANK(_d2), "<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c188 & "'>" & FORMAT(ABS(_d2), "0.0%") & "</text>" & _a188)
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'>" &
+				"<text x='20' y='36' font-family='Segoe UI' font-size='16' font-weight='600' fill='#4A4A5A'>Transactions</text>" &
+				"<text x='20' y='76' font-family='Segoe UI' font-size='32' font-weight='700' fill='#14141F'>" & _valTxt & "</text>" &
+				IF(_n > 1,
+					"<path d='M20,140 L" & _line & " L" & _lastX & ",140 Z' fill='#0E9F8E' fill-opacity='0.22'/>" &
+					"<polyline points='" & _line & "' fill='none' stroke='#0E9F8E' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/>") &
+				_r166 & _r188 &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_val), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: ffc11b8b-e64c-4f67-a790-fa9f4a9fe1d5
+
+	/// SVG KPI card (value, 12-month sparkline, MoM and vs monthly average) for Active Customers.
+	measure 'Active Customers SVG Card' =
+			VAR _val = [Active Customers]
+			VAR _end = CALCULATE(MAX('Date'[Date]), Transactions)
+			VAR _months =
+				ADDCOLUMNS(
+					CALCULATETABLE(VALUES('Date'[Year Month Number]), DATESINPERIOD('Date'[Date], _end, -12, MONTH)),
+					"@v", VAR _ym = 'Date'[Year Month Number] RETURN CALCULATE([Active Customers], REMOVEFILTERS('Date'), 'Date'[Year Month Number] = _ym)
+				)
+			VAR _t = FILTER(_months, NOT ISBLANK([@v]))
+			VAR _n = COUNTROWS(_t)
+			VAR _min = MINX(_t, [@v])
+			VAR _max = MAXX(_t, [@v])
+			VAR _rng = IF(_max = _min, 1, _max - _min)
+			VAR _pts =
+				ADDCOLUMNS(_t,
+					"@x", ROUND(20 + (RANKX(_t, 'Date'[Year Month Number], , ASC) - 1) * 260 / MAX(_n - 1, 1), 0),
+					"@y", ROUND(138 - ([@v] - _min) / _rng * 44, 0))
+			VAR _line = CONCATENATEX(_pts, [@x] & "," & [@y], " ", 'Date'[Year Month Number], ASC)
+			VAR _lastX = MAXX(_pts, [@x])
+			VAR _lastYM = MAXX(_t, 'Date'[Year Month Number])
+			VAR _prevYM = MAXX(FILTER(_t, 'Date'[Year Month Number] < _lastYM), 'Date'[Year Month Number])
+			VAR _last = MAXX(FILTER(_t, 'Date'[Year Month Number] = _lastYM), [@v])
+			VAR _prev = MAXX(FILTER(_t, 'Date'[Year Month Number] = _prevYM), [@v])
+			VAR _avg = AVERAGEX(_t, [@v])
+			VAR _d1 = IF(NOT ISBLANK(_prev), DIVIDE(_last - _prev, ABS(_prev)))
+			VAR _d2 = IF(_n > 1, DIVIDE(_last - _avg, ABS(_avg)))
+			VAR _valTxt = IF(ABS(_val) >= 1000000, FORMAT(_val / 1000000, "#,0.0") & "M", IF(ABS(_val) >= 1000, FORMAT(_val / 1000, "#,0.0") & "K", FORMAT(_val, "#,0")))
+			VAR _c166 = IF(_d1 >= 0, "#1E9E4A", "#D13438")
+			VAR _a166 = IF(_d1 >= 0, "<polygon points='212,165 217,156 222,165' fill='" & _c166 & "'/>", "<polygon points='212,156 217,165 222,156' fill='" & _c166 & "'/>")
+			VAR _r166 = "<text x='64' y='166' font-family='Segoe UI' font-size='13' fill='#3A3A48'>MoM</text>" &
+				IF(ISBLANK(_d1), "<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='166' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c166 & "'>" & FORMAT(ABS(_d1), "0.0%") & "</text>" & _a166)
+			VAR _c188 = IF(_d2 >= 0, "#1E9E4A", "#D13438")
+			VAR _a188 = IF(_d2 >= 0, "<polygon points='212,187 217,178 222,187' fill='" & _c188 & "'/>", "<polygon points='212,178 217,187 222,178' fill='" & _c188 & "'/>")
+			VAR _r188 = "<text x='64' y='188' font-family='Segoe UI' font-size='13' fill='#3A3A48'>vs Avg</text>" &
+				IF(ISBLANK(_d2), "<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' fill='#9AA0A6'>n/a</text>",
+					"<text x='206' y='188' text-anchor='end' font-family='Segoe UI' font-size='13' font-weight='600' fill='" & _c188 & "'>" & FORMAT(ABS(_d2), "0.0%") & "</text>" & _a188)
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'>" &
+				"<text x='20' y='36' font-family='Segoe UI' font-size='16' font-weight='600' fill='#4A4A5A'>Active Customers</text>" &
+				"<text x='20' y='76' font-family='Segoe UI' font-size='32' font-weight='700' fill='#14141F'>" & _valTxt & "</text>" &
+				IF(_n > 1,
+					"<path d='M20,140 L" & _line & " L" & _lastX & ",140 Z' fill='#5B5BD6' fill-opacity='0.22'/>" &
+					"<polyline points='" & _line & "' fill='none' stroke='#5B5BD6' stroke-width='2.5' stroke-linejoin='round' stroke-linecap='round'/>") &
+				_r166 & _r188 &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_val), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: b0c5cdff-7dd7-4439-a884-1895cf7d0fdc
+
+	/// SVG dumbbell: hollow grey = Expenses, filled = Revenue (blue = profit, red = loss). Scaled across rows of the same level.
+	measure 'Revenue vs Expenses Dumbbell' =
+			VAR _r = [Revenue]
+			VAR _e = [Expenses]
+			VAR _cust = FILTER(ADDCOLUMNS(ALLSELECTED(Customer), "@r", [Revenue], "@e", [Expenses]), NOT ISBLANK([@r]) && NOT ISBLANK([@e]))
+			VAR _acc = FILTER(ADDCOLUMNS(ALLSELECTED(Account), "@r", [Revenue], "@e", [Expenses]), NOT ISBLANK([@r]) && NOT ISBLANK([@e]))
+			VAR _lo0 =
+				SWITCH(TRUE(),
+					ISINSCOPE(Customer[Customer]), MINX(_cust, MIN([@r], [@e])),
+					ISINSCOPE(Account[Account]), MINX(_acc, MIN([@r], [@e])),
+					MIN(_r, _e) * 0.9)
+			VAR _hi0 =
+				SWITCH(TRUE(),
+					ISINSCOPE(Customer[Customer]), MAXX(_cust, MAX([@r], [@e])),
+					ISINSCOPE(Account[Account]), MAXX(_acc, MAX([@r], [@e])),
+					MAX(_r, _e) * 1.1)
+			VAR _pad = (_hi0 - _lo0) * 0.06 + 1
+			VAR _lo = _lo0 - _pad
+			VAR _rng = (_hi0 + _pad) - _lo
+			VAR _xr = ROUND(12 + (_r - _lo) / _rng * 196, 0)
+			VAR _xe = ROUND(12 + (_e - _lo) / _rng * 196, 0)
+			VAR _col = IF(_r >= _e, "#2B6CB0", "#B4235A")
+			VAR _svg =
+				"<svg xmlns='http://www.w3.org/2000/svg' width='220' height='24' viewBox='0 0 220 24'>" &
+				"<line x1='6' y1='12' x2='214' y2='12' stroke='#E4E4EA' stroke-width='2'/>" &
+				"<line x1='" & _xe & "' y1='12' x2='" & _xr & "' y2='12' stroke='" & _col & "' stroke-width='3'/>" &
+				"<circle cx='" & _xe & "' cy='12' r='5' fill='#FFFFFF' stroke='#9AA0A6' stroke-width='2'/>" &
+				"<circle cx='" & _xr & "' cy='12' r='5.5' fill='" & _col & "'/>" &
+				"</svg>"
+			RETURN
+				IF(NOT ISBLANK(_r) && NOT ISBLANK(_e), "data:image/svg+xml;utf8," & SUBSTITUTE(SUBSTITUTE(_svg, "%", "%25"), "#", "%23"))
+		displayFolder: SVG
+		dataCategory: ImageUrl
+		lineageTag: 6ab82e42-6399-4c0d-9ca0-1f030e4259f0
+
+	/// Net Income with a direction arrow in the format string.
+	measure 'Net Income Signal' = [Net Income]
+		formatString: #,0 ▲;-#,0 ▼;0
+		displayFolder: SVG
+		lineageTag: 42f8c0f3-0ad4-4dd8-b00d-80ad5d10729a
+
 	column _
 		dataType: string
 		isHidden

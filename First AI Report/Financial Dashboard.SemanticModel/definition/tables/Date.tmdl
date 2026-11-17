@@ -1,0 +1,104 @@
+/// Calendar dimension (Power Query). Covers full years of the transaction data. Date Key = yyyymmdd.
+table Date
+	lineageTag: e0ac4e6d-174c-45ee-97ed-521bceec32e8
+	dataCategory: Time
+
+	column 'Date Key'
+		dataType: int64
+		isHidden
+		lineageTag: dd204190-5d26-4be2-8b9a-014b0d861dbb
+		summarizeBy: none
+		sourceColumn: Date Key
+
+	column Date
+		dataType: dateTime
+		isUnique
+		formatString: yyyy-mm-dd
+		lineageTag: fa2a0c58-057a-4e4b-91a6-e8ea76dcbf59
+		sourceColumn: Date
+
+	column Year
+		dataType: int64
+		lineageTag: b52f57d8-a1d0-42a9-b4cf-4ef8c8ef5f58
+		summarizeBy: none
+		sourceColumn: Year
+
+	column Quarter
+		dataType: string
+		lineageTag: e40321ea-e690-45da-b2ca-f2acb569af92
+		sourceColumn: Quarter
+
+	column 'Year Quarter'
+		dataType: string
+		lineageTag: 20d2a5d9-6c0d-490d-b528-c17670b82ca3
+		sourceColumn: Year Quarter
+
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		lineageTag: 758dec98-d782-4ee2-ba2b-4c5361e4462b
+		summarizeBy: none
+		sourceColumn: Month Number
+
+	column Month
+		dataType: string
+		lineageTag: 7eb1a966-e1ae-4508-bbe2-246adc04b7f0
+		sourceColumn: Month
+		sortByColumn: 'Month Number'
+
+	column 'Year Month'
+		dataType: string
+		lineageTag: 4bfda891-ccac-4846-b671-081ef16de0f2
+		sourceColumn: Year Month
+		sortByColumn: 'Year Month Number'
+
+	column 'Year Month Number'
+		dataType: int64
+		isHidden
+		lineageTag: 518a27ae-9b14-41f8-8ee8-9684a62180c6
+		summarizeBy: none
+		sourceColumn: Year Month Number
+
+	column 'Week Number'
+		dataType: int64
+		lineageTag: ac8452c4-2e31-4ed7-aa70-045f7e7f5a8b
+		summarizeBy: none
+		sourceColumn: Week Number
+
+	column 'Weekday Number'
+		dataType: int64
+		isHidden
+		lineageTag: 9c9c87d9-58cf-4192-b343-efcbc84b7ac6
+		summarizeBy: none
+		sourceColumn: Weekday Number
+
+	column Weekday
+		dataType: string
+		lineageTag: e8989788-f1ca-409b-8c9e-c2043c45b96c
+		sourceColumn: Weekday
+		sortByColumn: 'Weekday Number'
+
+	partition Date = m
+		mode: import
+		source =
+				let
+				    Dates = #"GL Staging"[Date],
+				    StartDate = #date(Date.Year(List.Min(Dates)), 1, 1),
+				    EndDate = #date(Date.Year(List.Max(Dates)), 12, 31),
+				    DayCount = Duration.Days(EndDate - StartDate) + 1,
+				    Calendar = Table.FromList(List.Dates(StartDate, DayCount, #duration(1, 0, 0, 0)), Splitter.SplitByNothing(), type table [Date = date]),
+				    DateKey = Table.AddColumn(Calendar, "Date Key", each Date.Year([Date]) * 10000 + Date.Month([Date]) * 100 + Date.Day([Date]), Int64.Type),
+				    Year = Table.AddColumn(DateKey, "Year", each Date.Year([Date]), Int64.Type),
+				    Quarter = Table.AddColumn(Year, "Quarter", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    YearQuarter = Table.AddColumn(Quarter, "Year Quarter", each Text.From([Year]) & " " & [Quarter], type text),
+				    MonthNumber = Table.AddColumn(YearQuarter, "Month Number", each Date.Month([Date]), Int64.Type),
+				    Month = Table.AddColumn(MonthNumber, "Month", each Date.ToText([Date], "MMM", "en-US"), type text),
+				    YearMonth = Table.AddColumn(Month, "Year Month", each Date.ToText([Date], "yyyy-MM", "en-US"), type text),
+				    YearMonthNumber = Table.AddColumn(YearMonth, "Year Month Number", each [Year] * 100 + [Month Number], Int64.Type),
+				    WeekNumber = Table.AddColumn(YearMonthNumber, "Week Number", each Date.WeekOfYear([Date], Day.Monday), Int64.Type),
+				    WeekdayNumber = Table.AddColumn(WeekNumber, "Weekday Number", each Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
+				    Weekday = Table.AddColumn(WeekdayNumber, "Weekday", each Date.ToText([Date], "ddd", "en-US"), type text),
+				    Result = Table.ReorderColumns(Weekday, {"Date Key", "Date", "Year", "Quarter", "Year Quarter", "Month Number", "Month", "Year Month", "Year Month Number", "Week Number", "Weekday Number", "Weekday"})
+				in
+				    Result
+

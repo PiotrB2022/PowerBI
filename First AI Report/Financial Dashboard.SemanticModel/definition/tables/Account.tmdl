@@ -1,0 +1,37 @@
+/// GL account dimension (Power Query) with expected category from the Account Mapping query.
+table Account
+	lineageTag: 6ba0654d-997a-4d8d-a55a-ce93fba0b7c2
+
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		lineageTag: d0d0589f-9d63-4c36-a31f-bc279e55ec13
+		summarizeBy: none
+		sourceColumn: Account Key
+
+	column Account
+		dataType: string
+		lineageTag: 33f26e32-b084-4e7b-b282-cae57f9fec4b
+		sourceColumn: Account
+
+	column 'Expected Category'
+		dataType: string
+		lineageTag: 12b15370-9e2f-47ec-8b36-c3b0143a7ca7
+		sourceColumn: Expected Category
+
+	partition Account = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(#"GL Staging", {"Account"})),
+				    NonBlank = Table.SelectRows(Source, each [Account] <> null and [Account] <> ""),
+				    Sorted = Table.Sort(NonBlank, {{"Account", Order.Ascending}}),
+				    Indexed = Table.AddIndexColumn(Sorted, "Account Key", 1, 1, Int64.Type),
+				    Merged = Table.NestedJoin(Indexed, {"Account"}, #"Account Mapping", {"Account"}, "Map", JoinKind.LeftOuter),
+				    Expanded = Table.ExpandTableColumn(Merged, "Map", {"Expected Category"}),
+				    Filled = Table.ReplaceValue(Expanded, null, "Unmapped", Replacer.ReplaceValue, {"Expected Category"}),
+				    Typed = Table.TransformColumnTypes(Filled, {{"Expected Category", type text}}),
+				    Result = Table.Sort(Table.SelectColumns(Typed, {"Account Key", "Account", "Expected Category"}), {{"Account Key", Order.Ascending}})
+				in
+				    Result
+

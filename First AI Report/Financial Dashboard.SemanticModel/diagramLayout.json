@@ -1,0 +1,177 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 275,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 806,
+            "y": 443
+          },
+          "nodeIndex": "Transactions",
+          "nodeLineageTag": "a2dbad24-a7d1-44a9-abc5-939bb682b512",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 50
+          },
+          "nodeIndex": "_Measures",
+          "nodeLineageTag": "4ab4e480-fa2b-4f90-b61c-9e8d1d4614dc",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 284,
+            "y": 50
+          },
+          "nodeIndex": "Account",
+          "nodeLineageTag": "4ae42b3e-2c23-4c83-897f-a6432e7a3c0b",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 568,
+            "y": 74
+          },
+          "nodeIndex": "Category",
+          "nodeLineageTag": "b4e6306c-1317-49e1-9a72-21c0d991e11e",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 852,
+            "y": 86
+          },
+          "nodeIndex": "Customer",
+          "nodeLineageTag": "e9b43e2c-11fd-4d8e-8e6f-fcd5261ebd27",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 1136,
+            "y": 0
+          },
+          "nodeIndex": "Date",
+          "nodeLineageTag": "403086d7-7aca-4468-b16b-cf4ba7a502b9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1420,
+            "y": 50
+          },
+          "nodeIndex": "Payment Method",
+          "nodeLineageTag": "a0e7e95f-0472-40fb-b25a-82278eb7b0cb",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 1704,
+            "y": 50
+          },
+          "nodeIndex": "Transaction Type",
+          "nodeLineageTag": "a06a3f5e-a584-4e13-afb4-8efca3cf5463",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 1988,
+            "y": 305.5
+          },
+          "nodeIndex": "Account Mapping",
+          "nodeLineageTag": "42c71d62-3609-48de-98c4-deb3bb0e21a4",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2272,
+            "y": 317.5
+          },
+          "nodeIndex": "Time Calc",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2556,
+            "y": 293.5
+          },
+          "nodeIndex": "Analyze By",
+          "nodeLineageTag": "a614f655-0600-4a61-bf47-8782f2bea927",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2840,
+            "y": 293.5
+          },
+          "nodeIndex": "Heatmap Metric",
+          "nodeLineageTag": "1beb3158-ed36-425f-ad43-bb981740db06",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

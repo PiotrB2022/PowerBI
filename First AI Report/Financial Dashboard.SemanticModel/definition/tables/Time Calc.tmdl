@@ -1,0 +1,52 @@
+table 'Time Calc'
+	lineageTag: 40c7a2c6-13a4-43b6-96fe-81c2ae2608b1
+
+	/// Time intelligence applied to any measure. Previous Period = previous month when one month is in context, otherwise the preceding window of the same length.
+	calculationGroup
+		precedence: 10
+
+		calculationItem Current = SELECTEDMEASURE()
+
+		/// Previous period
+		calculationItem PP =
+				VAR _min = MIN('Date'[Date])
+				VAR _max = MAX('Date'[Date])
+				VAR _days = _max - _min + 1
+				RETURN
+				IF(
+				    HASONEVALUE('Date'[Year Month]),
+				    CALCULATE(SELECTEDMEASURE(), DATEADD('Date'[Date], -1, MONTH)),
+				    CALCULATE(SELECTEDMEASURE(), DATESBETWEEN('Date'[Date], _min - _days, _min - 1))
+				)
+
+		calculationItem 'Δ PP' =
+				VAR _cur = SELECTEDMEASURE()
+				VAR _pp = CALCULATE(SELECTEDMEASURE(), 'Time Calc'[Time Calc] = "PP")
+				RETURN IF(NOT ISBLANK(_pp), _cur - _pp)
+
+		calculationItem 'Δ PP %' =
+				VAR _cur = SELECTEDMEASURE()
+				VAR _pp = CALCULATE(SELECTEDMEASURE(), 'Time Calc'[Time Calc] = "PP")
+				RETURN IF(NOT ISBLANK(_pp), DIVIDE(_cur - _pp, ABS(_pp)))
+
+			formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+		calculationItem PY = CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR('Date'[Date]))
+
+		calculationItem 'YoY %' =
+				VAR _cur = SELECTEDMEASURE()
+				VAR _py = CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR('Date'[Date]))
+				RETURN IF(NOT ISBLANK(_py), DIVIDE(_cur - _py, ABS(_py)))
+
+			formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+		calculationItem YTD = CALCULATE(SELECTEDMEASURE(), DATESYTD('Date'[Date]))
+
+		calculationItem 'Rolling 3M' = CALCULATE(SELECTEDMEASURE(), DATESINPERIOD('Date'[Date], MAX('Date'[Date]), -3, MONTH))
+
+	column 'Time Calc'
+		dataType: string
+		lineageTag: d3b74096-1141-400a-bafb-304ad0c908fe
+
+	partition 'Partition_Time Calc' = calculationGroup
+

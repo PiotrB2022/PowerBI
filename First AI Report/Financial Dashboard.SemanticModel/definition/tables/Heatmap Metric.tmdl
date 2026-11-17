@@ -1,0 +1,44 @@
+table 'Heatmap Metric'
+	lineageTag: fc4c1e13-86a6-438e-850d-6aa64c66d09b
+
+	column 'Heatmap Metric Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9dd6d7f4-7a7c-4d52-bd22-234ced48ad69
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+	column 'Heatmap Metric Fields'
+		dataType: string
+		isHidden
+		lineageTag: a61545a8-a1aa-4e24-aad2-4308aa9442ed
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Heatmap Metric Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	column 'Heatmap Metric'
+		dataType: string
+		lineageTag: e2901c64-8f59-4f7c-affc-1dc31cf21540
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Heatmap Metric Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Heatmap Metric Fields'
+
+	partition 'Heatmap Metric' = calculated
+		mode: import
+		source =
+				{
+				    ("Amount", NAMEOF('_Measures'[Total Amount]), 0),
+				    ("Transactions", NAMEOF('_Measures'[Transactions]), 1),
+				    ("Avg transaction", NAMEOF('_Measures'[Avg Transaction Value]), 2)
+				}
+

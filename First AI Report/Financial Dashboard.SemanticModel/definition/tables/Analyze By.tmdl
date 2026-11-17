@@ -1,0 +1,46 @@
+table 'Analyze By'
+	lineageTag: 09363238-7080-436b-b3db-9fd4abbf8511
+
+	column 'Analyze By Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 40611143-d539-437f-9820-545c34c7eaa3
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+	column 'Analyze By Fields'
+		dataType: string
+		isHidden
+		lineageTag: 60c5b19d-1ac3-47e6-a373-3a94fe7da0e6
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Analyze By Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	column 'Analyze By'
+		dataType: string
+		lineageTag: e96f6b4b-5ca1-4ef2-87f3-316a1f06049e
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Analyze By Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Analyze By Fields'
+
+	partition 'Analyze By' = calculated
+		mode: import
+		source =
+				{
+				    ("Category", NAMEOF('Category'[Category]), 0),
+				    ("Account", NAMEOF('Account'[Account]), 1),
+				    ("Transaction Type", NAMEOF('Transaction Type'[Transaction Type]), 2),
+				    ("Payment Method", NAMEOF('Payment Method'[Payment Method]), 3),
+				    ("Customer", NAMEOF('Customer'[Customer]), 4)
+				}
+

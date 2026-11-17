@@ -1,0 +1,28 @@
+/// Transaction type dimension (Power Query).
+table 'Transaction Type'
+	lineageTag: 984c1210-2a4e-4e6d-8d47-bcc36da06084
+
+	column 'Transaction Type Key'
+		dataType: int64
+		isHidden
+		lineageTag: bdbf65c2-2bb5-4c78-8129-9b6535edb015
+		summarizeBy: none
+		sourceColumn: Transaction Type Key
+
+	column 'Transaction Type'
+		dataType: string
+		lineageTag: 17036be8-3f92-42c8-896f-0094f5e5c10a
+		sourceColumn: Transaction Type
+
+	partition 'Transaction Type' = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(#"GL Staging", {"Transaction Type"})),
+				    NonBlank = Table.SelectRows(Source, each [Transaction Type] <> null and [Transaction Type] <> ""),
+				    Sorted = Table.Sort(NonBlank, {{"Transaction Type", Order.Ascending}}),
+				    Indexed = Table.AddIndexColumn(Sorted, "Transaction Type Key", 1, 1, Int64.Type),
+				    Result = Table.ReorderColumns(Indexed, {"Transaction Type Key", "Transaction Type"})
+				in
+				    Result
+

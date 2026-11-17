@@ -1,0 +1,30 @@
+/// Customer dimension (Power Query). Customer Key follows the numeric part of the name, so it also drives the sort order.
+table Customer
+	lineageTag: 7352004a-7867-483c-98d9-26925bc87e7f
+
+	column 'Customer Key'
+		dataType: int64
+		isHidden
+		lineageTag: 0cfbcd11-5049-4e71-a468-31a51c49b78f
+		summarizeBy: none
+		sourceColumn: Customer Key
+
+	column Customer
+		dataType: string
+		lineageTag: c5cb9986-54f3-42f9-b280-2d8aad6eed74
+		sourceColumn: Customer
+		sortByColumn: 'Customer Key'
+
+	partition Customer = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(#"GL Staging", {"Customer"})),
+				    NonBlank = Table.SelectRows(Source, each [Customer] <> null and [Customer] <> ""),
+				    Num = Table.AddColumn(NonBlank, "Num", each try Number.From(Text.AfterDelimiter([Customer], " ")) otherwise null, type nullable number),
+				    Sorted = Table.Sort(Num, {{"Num", Order.Ascending}, {"Customer", Order.Ascending}}),
+				    Indexed = Table.AddIndexColumn(Sorted, "Customer Key", 1, 1, Int64.Type),
+				    Result = Table.SelectColumns(Indexed, {"Customer Key", "Customer"})
+				in
+				    Result
+

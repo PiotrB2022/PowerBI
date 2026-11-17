@@ -1,0 +1,24 @@
+/// Staging query (not loaded): reads financial_accounting.csv, types and renames columns. All dimensions and the fact table reference it.
+expression 'GL Staging' =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\barej\Desktop\Claude Space\Power BI\First AI Report\financial_accounting.csv"), [Delimiter = ",", Columns = 10, Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+		    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"Date", type date}, {"Account", type text}, {"Description", type text}, {"Debit", type number}, {"Credit", type number}, {"Category", type text}, {"Transaction_Type", type text}, {"Customer_Vendor", type text}, {"Payment_Method", type text}, {"Reference", Int64.Type}}, "en-US"),
+		    Renamed = Table.RenameColumns(Typed, {{"Transaction_Type", "Transaction Type"}, {"Customer_Vendor", "Customer"}, {"Payment_Method", "Payment Method"}})
+		in
+		    Renamed
+	lineageTag: 10a3bdbc-cc61-4079-b6b2-34aeb8089adb
+
+/// Expected category per GL account (not loaded). Add a row here when a new account appears; unmapped accounts get 'Unmapped'.
+expression 'Account Mapping' =
+		#table(
+		    type table [Account = text, #"Expected Category" = text],
+		    {
+		        {"Cash", "Asset"},
+		        {"Accounts Receivable", "Asset"},
+		        {"Inventory", "Asset"},
+		        {"Accounts Payable", "Liability"}
+		    }
+		)
+	lineageTag: 4862e44b-6664-4e93-a1a3-ad28cea8a241
+

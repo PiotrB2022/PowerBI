@@ -1,0 +1,85 @@
+/// Fact (Power Query): one row per GL transaction. Only numeric columns: surrogate keys to every dimension, Transaction ID, Reference and Amount (Debit = Credit on every row).
+table Transactions
+	lineageTag: 2bd40a68-fefd-476c-9983-0eff88f0a180
+
+	column 'Transaction ID'
+		dataType: int64
+		lineageTag: e7b89f34-42cd-4ca1-bf2b-8d9139d7d0d3
+		summarizeBy: none
+		sourceColumn: Transaction ID
+
+	column 'Date Key'
+		dataType: int64
+		isHidden
+		lineageTag: e295e894-5bd0-4721-8be8-be19cc3bd9d1
+		summarizeBy: none
+		sourceColumn: Date Key
+
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		lineageTag: 46bf0262-92e6-46bf-8dde-5ac79e566274
+		summarizeBy: none
+		sourceColumn: Account Key
+
+	column 'Category Key'
+		dataType: int64
+		isHidden
+		lineageTag: ad2fedc6-5ac4-4ac3-96a1-4c116679420a
+		summarizeBy: none
+		sourceColumn: Category Key
+
+	column 'Transaction Type Key'
+		dataType: int64
+		isHidden
+		lineageTag: 4e48a370-19a9-4eaa-88c6-97697f9e32b0
+		summarizeBy: none
+		sourceColumn: Transaction Type Key
+
+	column 'Payment Method Key'
+		dataType: int64
+		isHidden
+		lineageTag: be4c6900-b703-4375-82d5-5c5501d176c5
+		summarizeBy: none
+		sourceColumn: Payment Method Key
+
+	column 'Customer Key'
+		dataType: int64
+		isHidden
+		lineageTag: b552abbf-8385-4959-be3b-5605a143bfcf
+		summarizeBy: none
+		sourceColumn: Customer Key
+
+	column Reference
+		dataType: int64
+		lineageTag: 1243fb14-d0a5-4ee4-915c-100946d96236
+		summarizeBy: none
+		sourceColumn: Reference
+
+	column Amount
+		dataType: decimal
+		isHidden
+		formatString: #,0.00
+		lineageTag: 8b94a4df-9d52-4d5c-a2e5-a90b9d35806e
+		sourceColumn: Amount
+
+	partition Transactions = m
+		mode: import
+		source =
+				let
+				    Source = #"GL Staging",
+				    TxId = Table.AddColumn(Source, "Transaction ID", each Number.From(Text.AfterDelimiter([Description], " ")), Int64.Type),
+				    DateKey = Table.AddColumn(TxId, "Date Key", each Date.Year([Date]) * 10000 + Date.Month([Date]) * 100 + Date.Day([Date]), Int64.Type),
+				    JoinKey = (t as table, col as text, dim as table, keyCol as text) as table =>
+				        Table.ExpandTableColumn(Table.NestedJoin(t, {col}, dim, {col}, "__dim", JoinKind.LeftOuter), "__dim", {keyCol}),
+				    WithAccount = JoinKey(DateKey, "Account", Account, "Account Key"),
+				    WithCategory = JoinKey(WithAccount, "Category", Category, "Category Key"),
+				    WithType = JoinKey(WithCategory, "Transaction Type", #"Transaction Type", "Transaction Type Key"),
+				    WithPayment = JoinKey(WithType, "Payment Method", #"Payment Method", "Payment Method Key"),
+				    WithCustomer = JoinKey(WithPayment, "Customer", Customer, "Customer Key"),
+				    Renamed = Table.RenameColumns(WithCustomer, {{"Debit", "Amount"}}),
+				    Selected = Table.SelectColumns(Renamed, {"Transaction ID", "Date Key", "Account Key", "Category Key", "Transaction Type Key", "Payment Method Key", "Customer Key", "Reference", "Amount"}),
+				    Typed = Table.TransformColumnTypes(Selected, {{"Account Key", Int64.Type}, {"Category Key", Int64.Type}, {"Transaction Type Key", Int64.Type}, {"Payment Method Key", Int64.Type}, {"Customer Key", Int64.Type}, {"Amount", type number}})
+				in
+				    Typed
+

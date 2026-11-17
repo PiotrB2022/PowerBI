@@ -1,0 +1,36 @@
+/// Account category dimension (Power Query). Category Key follows the P&L-first order (Revenue, Expense, Asset, Liability, then others).
+table Category
+	lineageTag: a49d23aa-38f8-4141-a0e9-2591adb1179c
+
+	column 'Category Key'
+		dataType: int64
+		isHidden
+		lineageTag: 5a878bea-425c-432c-bdf1-c147e744878a
+		summarizeBy: none
+		sourceColumn: Category Key
+
+	column Category
+		dataType: string
+		lineageTag: 682267a7-1bbd-44f6-bc66-b66db554ccbe
+		sourceColumn: Category
+		sortByColumn: 'Category Key'
+
+	column Statement
+		dataType: string
+		lineageTag: d38d5356-eadd-4371-bc5f-3607a3c9dcf3
+		sourceColumn: Statement
+
+	partition Category = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(#"GL Staging", {"Category"})),
+				    NonBlank = Table.SelectRows(Source, each [Category] <> null and [Category] <> ""),
+				    Order = Table.AddColumn(NonBlank, "Order", each let p = List.PositionOf({"Revenue", "Expense", "Asset", "Liability"}, [Category]) in if p < 0 then 99 else p, Int64.Type),
+				    Sorted = Table.Sort(Order, {{"Order", Order.Ascending}, {"Category", Order.Ascending}}),
+				    Indexed = Table.AddIndexColumn(Sorted, "Category Key", 1, 1, Int64.Type),
+				    Statement = Table.AddColumn(Indexed, "Statement", each if List.Contains({"Revenue", "Expense"}, [Category]) then "Profit & Loss" else "Balance Sheet", type text),
+				    Result = Table.SelectColumns(Statement, {"Category Key", "Category", "Statement"})
+				in
+				    Result
+

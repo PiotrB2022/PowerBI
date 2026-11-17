@@ -1,0 +1,28 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-GB
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
+
+ref table 'Time Calc'
+ref table _Measures
+ref table Date
+ref table Account
+ref table Category
+ref table 'Transaction Type'
+ref table 'Payment Method'
+ref table Customer
+ref table Transactions
+ref table 'Analyze By'
+ref table 'Heatmap Metric'
+
+ref cultureInfo en-US
+

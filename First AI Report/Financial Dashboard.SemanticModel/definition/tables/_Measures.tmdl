@@ -1,0 +1,279 @@
+/// Home table for all report measures.
+table _Measures
+	lineageTag: 0aa0aa85-1c17-4cba-a12d-83dfe8599008
+
+	/// Sum of transaction amounts (Debit = Credit).
+	measure 'Total Amount' = SUM(Transactions[Amount])
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 1a5afefa-22aa-4a2d-99c6-f6d583d28908
+
+	measure Transactions = COUNTROWS(Transactions)
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: dd5930f9-1b0a-4905-be6d-25a692ea14ee
+
+	measure 'Avg Transaction Value' = DIVIDE([Total Amount], [Transactions])
+		formatString: #,0.00
+		displayFolder: Base
+		lineageTag: 36a1e6fe-1d59-4406-b30c-78f0e3254df3
+
+	measure 'Active Customers' = DISTINCTCOUNT(Transactions[Customer Key])
+		formatString: #,0
+		displayFolder: Base
+		lineageTag: 4d9642f8-3320-4e00-9121-53e5439aa869
+
+	measure Revenue = CALCULATE([Total Amount], KEEPFILTERS(Category[Category] = "Revenue"))
+		formatString: #,0
+		displayFolder: P&L
+		lineageTag: 532eb951-2bcf-48f4-8c7b-a886cc632757
+
+	measure Expenses = CALCULATE([Total Amount], KEEPFILTERS(Category[Category] = "Expense"))
+		formatString: #,0
+		displayFolder: P&L
+		lineageTag: 093e0784-38e6-47b1-8914-578d3f588634
+
+	measure 'Net Income' = [Revenue] - [Expenses]
+		formatString: #,0;-#,0;0
+		displayFolder: P&L
+		lineageTag: 1fc429d6-25aa-487b-8a2c-827172da3966
+
+	measure 'Net Margin %' = DIVIDE([Net Income], [Revenue])
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: P&L
+		lineageTag: afd5ee2a-a5b2-4c8e-92e6-8405b9ccec1e
+
+	measure 'Expense Ratio %' = DIVIDE([Expenses], [Revenue])
+		formatString: 0.0%
+		displayFolder: P&L
+		lineageTag: b2a965bd-b905-4889-a5cb-563b369f3672
+
+	measure Assets = CALCULATE([Total Amount], KEEPFILTERS(Category[Category] = "Asset"))
+		formatString: #,0
+		displayFolder: Balance Sheet
+		lineageTag: 12975392-d526-46e5-b92f-16f44badd96b
+
+	measure Liabilities = CALCULATE([Total Amount], KEEPFILTERS(Category[Category] = "Liability"))
+		formatString: #,0
+		displayFolder: Balance Sheet
+		lineageTag: 8476c7b8-ed6d-489e-95f2-e3dafa208908
+
+	/// Asset movements minus liability movements.
+	measure 'Net Position' = [Assets] - [Liabilities]
+		formatString: #,0;-#,0;0
+		displayFolder: Balance Sheet
+		lineageTag: 5f79c7e3-442a-4893-bc55-f48deb4d3cc5
+
+	measure 'Liabilities to Assets %' = DIVIDE([Liabilities], [Assets])
+		formatString: 0.0%
+		displayFolder: Balance Sheet
+		lineageTag: 7222232a-c922-49bd-b039-c79f87cc740b
+
+	measure 'Revenue YTD' = TOTALYTD([Revenue], 'Date'[Date])
+		formatString: #,0
+		displayFolder: Time Intelligence
+		lineageTag: 1b7543ef-26d8-48b0-bc28-a25067795b4a
+
+	measure 'Expenses YTD' = TOTALYTD([Expenses], 'Date'[Date])
+		formatString: #,0
+		displayFolder: Time Intelligence
+		lineageTag: f3f19892-257a-49d2-a144-32151a5b761b
+
+	measure 'Net Income YTD' = TOTALYTD([Net Income], 'Date'[Date])
+		formatString: #,0;-#,0;0
+		displayFolder: Time Intelligence
+		lineageTag: cd827fdf-3965-4bb5-9ebd-c858ff9e21f9
+
+	measure 'Revenue PM' = CALCULATE([Revenue], DATEADD('Date'[Date], -1, MONTH))
+		formatString: #,0
+		displayFolder: Time Intelligence
+		lineageTag: 0bb79fc0-27e6-4193-aad4-282d585704e6
+
+	measure 'Revenue MoM %' = VAR _pm = [Revenue PM] RETURN IF(NOT ISBLANK(_pm), DIVIDE([Revenue] - _pm, _pm))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Time Intelligence
+		lineageTag: 0dddd8e1-8642-476c-955a-656c45218284
+
+	measure 'Net Income PM' = CALCULATE([Net Income], DATEADD('Date'[Date], -1, MONTH))
+		formatString: #,0;-#,0;0
+		displayFolder: Time Intelligence
+		lineageTag: 60e0144f-8338-44f8-b025-706a9328c40d
+
+	measure 'Net Income MoM %' = VAR _pm = [Net Income PM] RETURN IF(NOT ISBLANK(_pm), DIVIDE([Net Income] - _pm, ABS(_pm)))
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Time Intelligence
+		lineageTag: a97ba6dd-241c-4603-b8c1-0c23e2b11e83
+
+	measure 'Amount % of Total' = DIVIDE([Total Amount], CALCULATE([Total Amount], ALLSELECTED()))
+		formatString: 0.0%
+		displayFolder: Share
+		lineageTag: 60173aa2-a8b8-46a0-9e56-0e797aeccf71
+
+	measure 'Revenue % of Total' = DIVIDE([Revenue], CALCULATE([Revenue], ALLSELECTED(Customer)))
+		formatString: 0.0%
+		displayFolder: Share
+		lineageTag: 007a98c5-2492-4ca1-bed6-617c7c7489cd
+
+	measure 'Customer Revenue Rank' = IF(HASONEVALUE(Customer[Customer]) && NOT ISBLANK([Revenue]), RANKX(ALL(Customer), [Revenue], , DESC, Dense))
+		formatString: 0
+		displayFolder: Share
+		lineageTag: 037ad29a-46ee-49d3-a04b-1873962d9026
+
+	/// Field-value color for Net Income visuals: red for loss, green for profit.
+	measure 'Net Income Color' = IF([Net Income] < 0, "#C4314B", "#0E7C66")
+		displayFolder: Formatting
+		lineageTag: a082c8e1-ff23-48cb-8380-b163f5732205
+
+	/// Revenue shown only for the top 10 customers by revenue (blank otherwise).
+	measure 'Revenue Top 10 Customers' = IF([Customer Revenue Rank] <= 10, [Revenue])
+		formatString: #,0
+		displayFolder: Share
+		lineageTag: e6d32f3d-1245-4188-9f0a-5a11325f7d60
+
+	measure 'Revenue Δ PP %' = CALCULATE([Revenue], 'Time Calc'[Time Calc] = "Δ PP %")
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Comparison
+		lineageTag: 4026f52a-5894-4a8d-b4e4-ff8a0051b247
+
+	measure 'Expenses Δ PP %' = CALCULATE([Expenses], 'Time Calc'[Time Calc] = "Δ PP %")
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Comparison
+		lineageTag: 99602a22-e125-46bf-91c7-ef0de237c2bd
+
+	measure 'Net Income Δ PP' = CALCULATE([Net Income], 'Time Calc'[Time Calc] = "Δ PP")
+		formatString: +#,0;-#,0;0
+		displayFolder: Comparison
+		lineageTag: 134c05b5-8233-46b1-8b45-1c2ce95281f3
+
+	/// Change of net margin in percentage points vs previous period.
+	measure 'Net Margin Δ PP (pp)' = VAR _pp = CALCULATE([Net Margin %], 'Time Calc'[Time Calc] = "PP") RETURN IF(NOT ISBLANK(_pp), [Net Margin %] - _pp)
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Comparison
+		lineageTag: 9b476f64-9b3b-40f5-8337-bdc49d4e5a42
+
+	measure 'Revenue YoY %' = CALCULATE([Revenue], 'Time Calc'[Time Calc] = "YoY %")
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Comparison
+		lineageTag: 3a1d2596-4942-443e-8a2e-75afae26562c
+
+	/// Average monthly revenue over the last 3 months.
+	measure 'Revenue Rolling 3M Avg' =
+			VAR _window = DATESINPERIOD('Date'[Date], MAX('Date'[Date]), -3, MONTH)
+			VAR _months = CALCULATE(COUNTROWS(FILTER(VALUES('Date'[Year Month]), NOT ISBLANK([Revenue]))), _window)
+			RETURN DIVIDE(CALCULATE([Revenue], _window), _months)
+		formatString: #,0
+		displayFolder: Comparison
+		lineageTag: 12e01de7-84c6-4d34-a643-7e727f9dd005
+
+	/// Pareto: running share of revenue from customers ranked by revenue (ALLSELECTED on the whole Customer table because of the sort-by column).
+	measure 'Cumulative Customer Share %' =
+			VAR _rev = [Revenue]
+			VAR _all = ADDCOLUMNS(ALLSELECTED(Customer), "@r", [Revenue])
+			VAR _tot = SUMX(_all, [@r])
+			VAR _cum = SUMX(FILTER(_all, [@r] >= _rev), [@r])
+			RETURN IF(NOT ISBLANK(_rev), DIVIDE(_cum, _tot))
+		formatString: 0%
+		displayFolder: Concentration
+		lineageTag: 2b92c116-80aa-4573-afeb-838ace9728fa
+
+	measure 'Customers for 80% Revenue' =
+			VAR _t = FILTER(ADDCOLUMNS(VALUES(Customer), "@r", [Revenue]), NOT ISBLANK([@r]))
+			VAR _tot = SUMX(_t, [@r])
+			RETURN COUNTROWS(FILTER(_t, VAR _r = [@r] RETURN SUMX(FILTER(_t, [@r] > _r), [@r]) < 0.8 * _tot))
+		formatString: #,0
+		displayFolder: Concentration
+		lineageTag: dbea6cb4-d1c1-4bc1-8b3b-320f1bb9c26b
+
+	/// Share of customers that generate 80% of revenue; low values mean high concentration.
+	measure 'Customers for 80% Revenue %' = DIVIDE([Customers for 80% Revenue], COUNTROWS(FILTER(VALUES(Customer), NOT ISBLANK([Revenue]))))
+		formatString: 0%
+		displayFolder: Concentration
+		lineageTag: 99fdf5e6-18fe-4c88-966b-4ca53b6be398
+
+	measure 'Amount P95' = CALCULATE(PERCENTILE.INC(Transactions[Amount], 0.95), ALLSELECTED(Transactions))
+		formatString: #,0.00
+		displayFolder: Outliers
+		lineageTag: a717e0ab-ddaf-41d5-95e4-220868bfdce0
+
+	/// Amount of transactions above the 95th percentile of the current selection.
+	measure 'Outlier Amount' = VAR _p = [Amount P95] RETURN SUMX(FILTER(Transactions, Transactions[Amount] > _p), Transactions[Amount])
+		formatString: #,0.00
+		displayFolder: Outliers
+		lineageTag: 20f78c71-ba25-4936-9d19-86f487c26057
+
+	measure 'Outlier Transactions' = VAR _p = [Amount P95] RETURN COUNTROWS(FILTER(Transactions, Transactions[Amount] > _p)) + 0
+		formatString: #,0
+		displayFolder: Outliers
+		lineageTag: e0c63786-73c6-43f8-9f56-13771a26ed5f
+
+	/// Share of transactions whose Category differs from the expected category of the account (Account Mapping query in Power Query).
+	measure 'Account Category Mismatch %' =
+			DIVIDE(
+			    COUNTROWS(FILTER(Transactions, RELATED(Account[Expected Category]) <> RELATED(Category[Category]))),
+			    COUNTROWS(Transactions)
+			)
+		formatString: 0.0%
+		displayFolder: Data Quality
+		lineageTag: 2ef9abd7-3e9a-4a70-a0f7-4a26a6801a99
+
+	measure 'Customer Profit Color' = IF([Revenue] - [Expenses] < 0, "#C4314B", "#0E7C66")
+		displayFolder: Formatting
+		lineageTag: b8c423df-8508-4c7b-b711-8400cc4d0b11
+
+	/// Average daily revenue over the 28 days before the current day.
+	measure 'Revenue Baseline 28D' =
+			VAR _d = MAX('Date'[Date])
+			RETURN AVERAGEX(DATESINPERIOD('Date'[Date], _d - 1, -28, DAY), [Revenue])
+		formatString: #,0
+		displayFolder: Anomalies
+		lineageTag: 9dda97da-4bb1-46fa-b155-32ba5ce2ff52
+
+	measure 'Revenue StdDev 28D' =
+			VAR _d = MAX('Date'[Date])
+			RETURN STDEVX.S(DATESINPERIOD('Date'[Date], _d - 1, -28, DAY), [Revenue])
+		formatString: #,0
+		displayFolder: Anomalies
+		lineageTag: fe8aba9b-c059-4387-8c50-e0f602b7c492
+
+	/// Daily revenue that deviates more than 2 standard deviations from the 28-day baseline.
+	measure 'Revenue Anomaly' =
+			VAR _r = [Revenue]
+			VAR _b = [Revenue Baseline 28D]
+			VAR _s = [Revenue StdDev 28D]
+			RETURN IF(NOT ISBLANK(_r) && NOT ISBLANK(_s) && ABS(_r - _b) > 2 * _s, _r)
+		formatString: #,0
+		displayFolder: Anomalies
+		lineageTag: bfb70240-c529-4d08-8e07-13c4b08a3da8
+
+	measure 'Revenue Anomaly Days' = COUNTROWS(FILTER(VALUES('Date'[Date]), NOT ISBLANK([Revenue Anomaly])))
+		formatString: #,0
+		displayFolder: Anomalies
+		lineageTag: f3d91f26-3695-4d1e-8ed6-6354bbd41390
+
+	/// Net Income of the last month in the selection (capped at the last month with data) minus the month before.
+	measure 'Net Income Δ Last Month' =
+			VAR _maxSel = MAX('Date'[Date])
+			VAR _maxKey = CALCULATE(MAX(Transactions[Date Key]), REMOVEFILTERS())
+			VAR _maxData = DATE(INT(_maxKey / 10000), MOD(INT(_maxKey / 100), 100), MOD(_maxKey, 100))
+			VAR _end = MIN(_maxSel, _maxData)
+			VAR _cur = CALCULATE([Net Income], DATESBETWEEN('Date'[Date], EOMONTH(_end, -1) + 1, EOMONTH(_end, 0)))
+			VAR _prev = CALCULATE([Net Income], DATESBETWEEN('Date'[Date], EOMONTH(_end, -2) + 1, EOMONTH(_end, -1)))
+			RETURN IF(NOT ISBLANK(_cur) || NOT ISBLANK(_prev), _cur - _prev)
+		formatString: +#,0;-#,0;0
+		displayFolder: Comparison
+		lineageTag: a4e0e805-a538-4318-8471-e9b2b5b4d5f6
+
+	measure 'Net Income Δ Color' = IF([Net Income Δ Last Month] < 0, "#C4314B", "#0E7C66")
+		displayFolder: Formatting
+		lineageTag: 28b9a180-0f8a-4274-9182-fc0a674b210f
+
+	column _
+		dataType: string
+		isHidden
+		lineageTag: ed8f22b6-a34c-47ff-8984-5e2bfe949ef9
+		sourceColumn: _
+
+	partition _Measures_new = m
+		mode: import
+		source = #table(type table [#"_" = text], {})
+

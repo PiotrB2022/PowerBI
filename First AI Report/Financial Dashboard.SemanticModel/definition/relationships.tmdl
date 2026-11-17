@@ -1,0 +1,24 @@
+relationship Transactions_Date
+	fromColumn: Transactions.'Date Key'
+	toColumn: Date.'Date Key'
+
+relationship Transactions_Account
+	fromColumn: Transactions.'Account Key'
+	toColumn: Account.'Account Key'
+
+relationship Transactions_Category
+	fromColumn: Transactions.'Category Key'
+	toColumn: Category.'Category Key'
+
+relationship Transactions_TransactionType
+	fromColumn: Transactions.'Transaction Type Key'
+	toColumn: 'Transaction Type'.'Transaction Type Key'
+
+relationship Transactions_PaymentMethod
+	fromColumn: Transactions.'Payment Method Key'
+	toColumn: 'Payment Method'.'Payment Method Key'
+
+relationship Transactions_Customer
+	fromColumn: Transactions.'Customer Key'
+	toColumn: Customer.'Customer Key'
+

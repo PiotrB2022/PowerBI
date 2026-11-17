@@ -1,0 +1,18 @@
+# Power BI local/cache files (contain imported data and user settings)
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Binary report files - use PBIP instead
+*.pbix
+
+# Source data - keep out of the repo
+*.csv
+*.xlsx
+*.xls
+*.parquet
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/

@@ -1,0 +1,28 @@
+/// Payment method dimension (Power Query).
+table 'Payment Method'
+	lineageTag: 89f88b89-a1e3-427e-8c5c-f3c4995c81d7
+
+	column 'Payment Method Key'
+		dataType: int64
+		isHidden
+		lineageTag: 3c6dc6a8-8b02-4d37-bc8c-77f5184ea23c
+		summarizeBy: none
+		sourceColumn: Payment Method Key
+
+	column 'Payment Method'
+		dataType: string
+		lineageTag: 471df6be-0c9b-4b9a-9e3f-d4fa47754c37
+		sourceColumn: Payment Method
+
+	partition 'Payment Method' = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(#"GL Staging", {"Payment Method"})),
+				    NonBlank = Table.SelectRows(Source, each [Payment Method] <> null and [Payment Method] <> ""),
+				    Sorted = Table.Sort(NonBlank, {{"Payment Method", Order.Ascending}}),
+				    Indexed = Table.AddIndexColumn(Sorted, "Payment Method Key", 1, 1, Int64.Type),
+				    Result = Table.ReorderColumns(Indexed, {"Payment Method Key", "Payment Method"})
+				in
+				    Result
+

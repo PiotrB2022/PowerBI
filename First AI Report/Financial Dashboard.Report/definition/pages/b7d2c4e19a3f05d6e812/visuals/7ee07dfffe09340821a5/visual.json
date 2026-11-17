@@ -301,7 +301,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Seasonality: weekday × quarter'"
+                  "Value": "'Seasonality: weekday × quarter, metric:'"
                 }
               }
             },

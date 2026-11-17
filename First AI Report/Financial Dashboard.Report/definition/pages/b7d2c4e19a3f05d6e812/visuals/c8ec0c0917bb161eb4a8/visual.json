@@ -137,7 +137,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Net Income change: last month vs previous, by \"Analyze by\"'"
+                  "Value": "'Net Income change vs previous month, by:'"
                 }
               }
             },

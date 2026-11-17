@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "05945d102eebdcb13f6e",
   "position": {
-    "x": 16,
-    "y": 928,
-    "z": 10000,
-    "height": 80,
-    "width": 248,
-    "tabOrder": 10000
+    "x": 1112,
+    "y": 556,
+    "z": 16500,
+    "height": 48,
+    "width": 176,
+    "tabOrder": 16500
   },
   "visual": {
     "visualType": "slicer",
@@ -54,14 +54,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Heatmap metric'"
+                  "Value": "false"
                 }
               }
             }
@@ -186,28 +179,28 @@
             "top": {
               "expr": {
                 "Literal": {
-                  "Value": "8D"
+                  "Value": "4D"
                 }
               }
             },
             "bottom": {
               "expr": {
                 "Literal": {
-                  "Value": "8D"
+                  "Value": "4D"
                 }
               }
             },
             "left": {
               "expr": {
                 "Literal": {
-                  "Value": "8D"
+                  "Value": "4D"
                 }
               }
             },
             "right": {
               "expr": {
                 "Literal": {
-                  "Value": "8D"
+                  "Value": "4D"
                 }
               }
             }

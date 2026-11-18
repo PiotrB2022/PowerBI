@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Financial Report"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "095de439-26ad-4259-b785-1bdc3f13e7fd"
+  }
+}

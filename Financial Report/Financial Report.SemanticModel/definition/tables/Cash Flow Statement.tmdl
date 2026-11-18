@@ -1,0 +1,221 @@
+/// Layout of the cash flow statement. One row per statement line and account. Intentionally has no relationships: the Cash Flow Amount measure applies each row's account and calculation rule to the general ledger.
+table 'Cash Flow Statement'
+	lineageTag: b9376ea8-ed05-499d-b740-8b0f11c81108
+
+	/// Statement value for the selected lines and period. Applies each line's rule: period movement, only positive or only negative postings, reversed sign, or opening or closing balance. Across several sections, the closing balance is left out so the total equals closing cash.
+	measure 'Cash Flow Amount' =
+			VAR _firstDate = MIN('Date'[Date])
+			VAR _lastDate = MAX('Date'[Date])
+			VAR _isSingleSection = HASONEVALUE('Cash Flow Statement'[Cash Flow Section])
+			VAR _lines =
+			    FILTER(
+			        'Cash Flow Statement',
+			        _isSingleSection || 'Cash Flow Statement'[Value Type] <> "Closing_balance"
+			    )
+			RETURN
+			    SUMX(
+			        _lines,
+			        VAR _valueType = 'Cash Flow Statement'[Value Type]
+			        VAR _accounts = TREATAS({ 'Cash Flow Statement'[Account Key] }, 'Account'[Account Key])
+			        VAR _period = CALCULATE([Ledger Amount], _accounts)
+			        VAR _positive = CALCULATE([Ledger Amount], _accounts, 'General Ledger'[Amount] > 0)
+			        VAR _negative = CALCULATE([Ledger Amount], _accounts, 'General Ledger'[Amount] < 0)
+			        VAR _opening = CALCULATE([Ledger Amount], _accounts, REMOVEFILTERS('Date'), 'Date'[Date] < _firstDate)
+			        VAR _closing = CALCULATE([Ledger Amount], _accounts, REMOVEFILTERS('Date'), 'Date'[Date] <= _lastDate)
+			        RETURN
+			            SWITCH(
+			                _valueType,
+			                "All_FTP", _period,
+			                "All_FTP_CS", -_period,
+			                "All_FTP_Positive", _positive,
+			                "All_FTP_Positive_CS", -_positive,
+			                "All_FTP_Negative", _negative,
+			                "All_FTP_Negative_CS", -_negative,
+			                "Opening_balance", _opening,
+			                "Closing_balance", _closing
+			            )
+			    )
+		formatString: #,##0
+		lineageTag: 4b8ce534-895b-442d-9f23-a7f14a5533d2
+
+	/// Cash generated or used by operating activities in the selected period.
+	measure 'Operating Cash Flow' = CALCULATE([Cash Flow Amount], 'Cash Flow Statement'[Cash Flow Section] = "Cash flows from Operating Activities")
+		formatString: #,##0
+		lineageTag: 1bcd041b-7d64-4688-84f7-db3c33d73e13
+
+	/// Cash generated or used by investing activities in the selected period.
+	measure 'Investing Cash Flow' = CALCULATE([Cash Flow Amount], 'Cash Flow Statement'[Cash Flow Section] = "Cash flows from Investing Activities")
+		formatString: #,##0
+		lineageTag: 7e47e07d-8e99-42ac-b2aa-f85ea8be0a40
+
+	/// Cash generated or used by financing activities in the selected period.
+	measure 'Financing Cash Flow' = CALCULATE([Cash Flow Amount], 'Cash Flow Statement'[Cash Flow Section] = "Cashflows from Financing Activities")
+		formatString: #,##0
+		lineageTag: c6a8df2b-557a-46ae-989c-b67b0132b8ec
+
+	/// Sum of operating, investing, and financing cash flows in the selected period.
+	measure 'Net Cash Flow' = [Operating Cash Flow] + [Investing Cash Flow] + [Financing Cash Flow]
+		formatString: #,##0
+		lineageTag: 59456294-4b34-4211-b3c8-02c5d1425ec2
+
+	/// Cash and cash equivalents immediately before the selected period.
+	measure 'Cash at Start of Period' = CALCULATE([Cash Flow Amount], 'Cash Flow Statement'[Cash Flow Section] = "Cash and Cash equivalents at the start of the year")
+		formatString: #,##0
+		lineageTag: 277925a1-6ff3-478d-8525-986cb71f21f9
+
+	/// Cash and cash equivalents on the last day of the selected period.
+	measure 'Cash at End of Period' = CALCULATE([Cash Flow Amount], 'Cash Flow Statement'[Cash Flow Section] = "Cash and Cash equivalents at the end of the year")
+		formatString: #,##0
+		lineageTag: 42e1fcf7-216e-459a-be56-a28996251364
+
+	/// Cash flow statement amount for the same period one year earlier.
+	measure 'Cash Flow Amount (ly)' = CALCULATE([Cash Flow Amount], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 403aa417-946b-4a1b-bacd-bca564564270
+
+	/// Operating cash flow for the same period one year earlier.
+	measure 'Operating Cash Flow (ly)' = CALCULATE([Operating Cash Flow], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 97896db7-a8f8-4452-9a6b-95dfce5e3fd9
+
+	/// Change in operating cash flow against one year earlier. Blank when there is no prior-year value.
+	measure 'Operating Cash Flow Growth (%)' =
+			VAR _current = [Operating Cash Flow]
+			VAR _prior = [Operating Cash Flow (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: c0cb2975-8302-4e88-a758-d9040a9ca0a6
+
+	/// Investing cash flow for the same period one year earlier.
+	measure 'Investing Cash Flow (ly)' = CALCULATE([Investing Cash Flow], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 78124d1e-771d-496f-b214-f3c76d807840
+
+	/// Change in the size of investing cash flow against one year earlier. A positive value means more cash went into investing.
+	measure 'Investing Outflow Growth (%)' =
+			VAR _current = ABS([Investing Cash Flow])
+			VAR _prior = ABS([Investing Cash Flow (ly)])
+			RETURN
+			    DIVIDE(_current - _prior, _prior)
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: c259f07d-f124-423c-bcbf-0ae241e747f5
+
+	/// Financing cash flow for the same period one year earlier.
+	measure 'Financing Cash Flow (ly)' = CALCULATE([Financing Cash Flow], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 60a5fac4-f217-4501-b854-f9ca652b739b
+
+	/// Change in financing cash flow against one year earlier. Blank when there is no prior-year value.
+	measure 'Financing Cash Flow Growth (%)' =
+			VAR _current = [Financing Cash Flow]
+			VAR _prior = [Financing Cash Flow (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: c186ee4c-37a6-4d87-acf6-39d72d231f1a
+
+	/// Net cash flow for the same period one year earlier.
+	measure 'Net Cash Flow (ly)' = CALCULATE([Net Cash Flow], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: c49b6441-edc8-492f-8009-0232683d2b46
+
+	/// Net cash flow less net cash flow one year earlier. Shown as an amount because net cash flow can change sign.
+	measure 'Net Cash Flow Change' =
+			VAR _prior = [Net Cash Flow (ly)]
+			RETURN
+			    IF(NOT ISBLANK(_prior), [Net Cash Flow] - _prior)
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: c2214dd5-722c-4fc8-aa2c-d481c196a2ee
+
+	/// Cash absorbed or released by working capital in the selected period. A negative value means working capital absorbed cash.
+	measure 'Working Capital Changes' = CALCULATE([Cash Flow Amount], 'Cash Flow Statement'[Cash Flow Line] = "Working Capital Changes")
+		formatString: #,##0
+		lineageTag: 9c9e7f77-8311-4ed0-a0a8-0db7a0ed31a6
+
+	/// Main section of the statement, such as operating, investing, or financing activities.
+	column 'Cash Flow Section'
+		dataType: string
+		lineageTag: 64a6ed2c-6755-4e9d-956e-b1734d1f04a5
+		summarizeBy: none
+		sourceColumn: Cash Flow Section
+		sortByColumn: 'Section Order'
+
+	/// Statement line within a section, such as Working Capital Changes.
+	column 'Cash Flow Line'
+		dataType: string
+		lineageTag: 6ae2621c-5543-491a-bab3-5f07919b0aa5
+		summarizeBy: none
+		sourceColumn: Cash Flow Line
+		sortByColumn: 'Line Order'
+
+	/// Account group shown under a statement line.
+	column 'Cash Flow Account'
+		dataType: string
+		lineageTag: 71a48a0c-b664-41db-a332-de081da0edb3
+		summarizeBy: none
+		sourceColumn: Cash Flow Account
+
+	/// Lowest level of detail shown under a statement line.
+	column 'Cash Flow Subaccount'
+		dataType: string
+		lineageTag: 8ecdf463-de66-4140-8da4-afa00525bf5f
+		summarizeBy: none
+		sourceColumn: Cash Flow Subaccount
+
+	/// Calculation rule for the line. FTP means the selected period, CS means change sign, and Positive or Negative keep only those postings.
+	column 'Value Type'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 43b2ca6a-c5d0-4097-a1f2-26ba33028ab0
+		summarizeBy: none
+		sourceColumn: Value Type
+
+	/// Ledger account used by the line.
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 73ddaf30-539f-4574-ad03-84b9b498eb3b
+		summarizeBy: none
+		sourceColumn: Account Key
+
+	/// Display order of the sections.
+	column 'Section Order'
+		dataType: int64
+		isHidden
+		lineageTag: 41a4d3a7-3205-4b83-8a31-e63b13718782
+		summarizeBy: none
+		sourceColumn: Section Order
+
+	/// Display order of the statement lines.
+	column 'Line Order'
+		dataType: int64
+		isHidden
+		lineageTag: 93ce8c9b-60ba-4b83-b8df-d29ba75fedbe
+		summarizeBy: none
+		sourceColumn: Line Order
+
+	partition 'Cash Flow Statement' = m
+		mode: import
+		source =
+				let
+				    // Opened the source workbook and selected the cash flow layout table
+				    #"Opened Workbook" = Excel.Workbook(File.Contents(#"Source File Path"), null, true),
+				    #"Selected Cash Flow Table" = #"Opened Workbook"{[Item = "tbl_CF_St", Kind = "Table"]}[Data],
+				    // Replaced technical source names with business-friendly names
+				    #"Renamed Columns" = Table.RenameColumns(#"Selected Cash Flow Table", {{"Type", "Cash Flow Section"}, {"Subtype", "Cash Flow Line"}, {"Account", "Cash Flow Account"}, {"SubAccount", "Cash Flow Subaccount"}, {"ValueType", "Value Type"}, {"Account_Key", "Account Key"}, {"Sort on Type", "Section Order"}, {"Sort on SubType", "Line Order"}}),
+				    #"Changed Types" = Table.TransformColumnTypes(#"Renamed Columns", {{"Cash Flow Section", type text}, {"Cash Flow Line", type text}, {"Cash Flow Account", type text}, {"Cash Flow Subaccount", type text}, {"Value Type", type text}, {"Account Key", Int64.Type}, {"Section Order", Int64.Type}, {"Line Order", Int64.Type}})
+				in
+				    #"Changed Types"
+

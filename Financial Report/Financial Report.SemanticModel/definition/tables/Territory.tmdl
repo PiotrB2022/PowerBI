@@ -1,0 +1,53 @@
+/// Sales territories. One row per country, grouped into regions.
+table Territory
+	lineageTag: dd795259-c417-45f3-8641-06dd7e4d3517
+
+	/// Unique territory identifier. Links the territory to the general ledger.
+	column 'Territory Key'
+		dataType: int64
+		isHidden
+		isKey
+		isAvailableInMdx: false
+		lineageTag: f29837ff-a50c-4994-a7ce-a406c1a0c71d
+		summarizeBy: none
+		sourceColumn: Territory Key
+
+	/// Country of the territory.
+	column Country
+		dataType: string
+		lineageTag: ae958f40-f5aa-44bb-a2ed-75a90918421b
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: Country
+
+	/// Geographic region that groups countries: Europe, North America, or Oceania.
+	column Region
+		dataType: string
+		lineageTag: f6f18992-02b3-4ef8-b93e-2b32a1be3995
+		summarizeBy: none
+		sourceColumn: Region
+
+	/// Drill-down path from region to country.
+	hierarchy 'Territory Hierarchy'
+		lineageTag: c1032d34-b728-4831-9390-20e6aa536fcc
+
+		level Region
+			lineageTag: 6956ccd6-7298-475f-b5ad-18fff119b95c
+			column: Region
+
+		level Country
+			lineageTag: a5d11041-e69c-4821-aaa0-bdbc849ff637
+			column: Country
+
+	partition Territory = m
+		mode: import
+		source =
+				let
+				    // Opened the source workbook and selected the territory table
+				    #"Opened Workbook" = Excel.Workbook(File.Contents(#"Source File Path"), null, true),
+				    #"Selected Territory Table" = #"Opened Workbook"{[Item = "tbl_territory", Kind = "Table"]}[Data],
+				    #"Renamed Columns" = Table.RenameColumns(#"Selected Territory Table", {{"Territory_key", "Territory Key"}}),
+				    #"Changed Types" = Table.TransformColumnTypes(#"Renamed Columns", {{"Territory Key", Int64.Type}, {"Country", type text}, {"Region", type text}})
+				in
+				    #"Changed Types"
+

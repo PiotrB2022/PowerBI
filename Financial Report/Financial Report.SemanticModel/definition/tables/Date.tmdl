@@ -1,0 +1,118 @@
+/// Daily calendar from 1 January 2018 to 31 December 2020. One row per day.
+table Date
+	lineageTag: bc9e6d3e-87ab-4510-8488-5463a562e739
+	dataCategory: Time
+
+	/// Calendar day. Primary key of the table.
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 45eefbb1-8442-4b6d-84f0-dcb447265f16
+		summarizeBy: none
+		sourceColumn: Date
+
+	/// Calendar year.
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 8ce1e06e-72ca-4889-a813-90e8615054ec
+		summarizeBy: none
+		sourceColumn: Year
+
+	/// Calendar quarter, shown as Qtr 1 to Qtr 4.
+	column Quarter
+		dataType: string
+		lineageTag: 5a08a315-687a-4981-9882-5b8b151492da
+		summarizeBy: none
+		sourceColumn: Quarter
+
+	/// Three-letter month name, sorted chronologically.
+	column Month
+		dataType: string
+		lineageTag: faf82102-f664-4cb1-91f4-93079dfc3e58
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month Number'
+
+	/// Month of the year from 1 to 12. Sorts the Month column.
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b312acda-988f-46af-9516-1636c5e3a530
+		summarizeBy: none
+		sourceColumn: Month Number
+
+	/// Month and year label such as Jan 2018, sorted chronologically.
+	column 'Year Month'
+		dataType: string
+		lineageTag: e4c16b29-891a-4455-bdae-9342349db8d5
+		summarizeBy: none
+		sourceColumn: Year Month
+		sortByColumn: 'Year Month Number'
+
+	/// Year and month as a number such as 201801. Sorts the Year Month column.
+	column 'Year Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ee019f98-8f71-47ec-b4fb-8e9b93127430
+		summarizeBy: none
+		sourceColumn: Year Month Number
+
+	/// Three-letter weekday name, sorted from Monday to Sunday.
+	column 'Day of Week'
+		dataType: string
+		lineageTag: 1105984f-3eeb-4a3c-acd0-6f68b09f6ec1
+		summarizeBy: none
+		sourceColumn: Day of Week
+		sortByColumn: 'Day of Week Number'
+
+	/// Weekday from 1 (Monday) to 7 (Sunday). Sorts the Day of Week column.
+	column 'Day of Week Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 023e8817-bb6e-4dbd-8ea4-3bde3a25cd5e
+		summarizeBy: none
+		sourceColumn: Day of Week Number
+
+	/// Drill-down path from year to day.
+	hierarchy 'Calendar Hierarchy'
+		lineageTag: 8f90eea3-f905-41bf-9bf5-7b3c8fc5f3cf
+
+		level Year
+			lineageTag: 4ebe107e-b90b-41c6-b01f-585c36bf1ae2
+			column: Year
+
+		level Quarter
+			lineageTag: 8d6e3759-a3a8-4e08-9c26-4ad73824d5f8
+			column: Quarter
+
+		level Month
+			lineageTag: 783afc88-1d9e-4670-ae3a-d125ab013ef4
+			column: Month
+
+		level Date
+			lineageTag: 87f97d67-0226-4818-9bd3-88ddd5e2e0b3
+			column: Date
+
+	partition Date = m
+		mode: import
+		source =
+				let
+				    // Opened the source workbook and selected the calendar table
+				    #"Opened Workbook" = Excel.Workbook(File.Contents(#"Source File Path"), null, true),
+				    #"Selected Calendar Table" = #"Opened Workbook"{[Item = "tbl_Calendar", Kind = "Table"]}[Data],
+				    // Gave the weekday column a descriptive name
+				    #"Renamed Columns" = Table.RenameColumns(#"Selected Calendar Table", {{"Day", "Day of Week"}}),
+				    #"Changed Base Types" = Table.TransformColumnTypes(#"Renamed Columns", {{"Date", type date}, {"Year", Int64.Type}, {"Quarter", type text}, {"Month", type text}, {"Day of Week", type text}}),
+				    // Added the numeric columns that sort the text labels chronologically
+				    #"Added Month Number" = Table.AddColumn(#"Changed Base Types", "Month Number", each Date.Month([Date]), Int64.Type),
+				    #"Added Year Month" = Table.AddColumn(#"Added Month Number", "Year Month", each [Month] & " " & Text.From([Year]), type text),
+				    #"Added Year Month Number" = Table.AddColumn(#"Added Year Month", "Year Month Number", each [Year] * 100 + [Month Number], Int64.Type),
+				    #"Added Day of Week Number" = Table.AddColumn(#"Added Year Month Number", "Day of Week Number", each Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type)
+				in
+				    #"Added Day of Week Number"
+

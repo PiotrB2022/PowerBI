@@ -1,0 +1,708 @@
+/// Ledger entries from 2018 to 2020. One row per posting to an account, territory, and date. Income, assets, liabilities, and equity increases are positive. Expenses are negative.
+table 'General Ledger'
+	lineageTag: 1bb26e42-6e3f-4761-a942-96372c16afe4
+
+	/// Sum of ledger postings in the current filter context. Meaningful only within one report, because balance sheet and profit and loss postings use different sign rules.
+	measure 'Ledger Amount' = SUM('General Ledger'[Amount])
+		formatString: #,##0
+		displayFolder: Ledger
+		lineageTag: b7ba5116-60ef-42fd-9e77-46e9b46c3b8f
+
+	/// Number of ledger postings in the current filter context.
+	measure '# Ledger Entries' = COUNTROWS('General Ledger')
+		formatString: #,##0
+		displayFolder: Ledger
+		lineageTag: bb9f102c-e9e8-4f96-ade7-f260b3b23293
+
+	/// Sales less sales returns.
+	measure 'Net Sales' = CALCULATE([Ledger Amount], 'Account'[Subclass] = "Sales")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 3f887b64-d581-499f-9e75-0d5b7059f824
+
+	/// Cost of goods sold, shown as a negative value.
+	measure 'Cost of Sales' = CALCULATE([Ledger Amount], 'Account'[Subclass] = "Cost of Sales")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 14c1e7fd-2d82-4862-89c2-e708b4f95d0e
+
+	/// Net sales less cost of sales.
+	measure 'Gross Profit' = CALCULATE([Ledger Amount], 'Account'[Class] = "Trading account")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: be7b2c0a-d9c5-468f-b44d-df7faac9a5aa
+
+	/// Operating costs excluding depreciation and amortization, shown as a negative value.
+	measure 'Operating Expenses' = CALCULATE([Ledger Amount], 'Account'[Subclass] = "Operating Expenses")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 30fed42b-3cd6-4dec-9717-5230c32c7790
+
+	/// Depreciation and amortization charges, shown as a negative value.
+	measure 'Depreciation and Amortization' = CALCULATE([Ledger Amount], 'Account'[Subclass] = "Depreciation & Amortization")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 9985985e-f4eb-46a3-8606-12815fd3a69f
+
+	/// Earnings before interest, tax, depreciation, and amortization (EBITDA). Excludes non-operating income.
+	measure EBITDA = [Operating Profit] - [Depreciation and Amortization]
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 752b8db9-e0d3-4f3e-8786-faf6fb6f49ca
+
+	/// Gross profit less operating expenses and depreciation and amortization. Excludes non-operating income, interest, and tax.
+	measure 'Operating Profit' =
+			CALCULATE(
+			    [Ledger Amount],
+			    'Account'[Class] IN { "Trading account", "Operating account" }
+			)
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 041ee3a1-1ed5-4bd6-97b4-aef103b74797
+
+	/// Interest income, dividend income, exchange differences, and gains or losses on asset sales.
+	measure 'Non-Operating Income' = CALCULATE([Ledger Amount], 'Account'[Class] = "Non-operating")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: ac0152dd-5818-4d0c-b5f7-78c7656ffd2d
+
+	/// Interest charged on borrowings, shown as a negative value.
+	measure 'Interest Expense' = CALCULATE([Ledger Amount], 'Account'[Subclass] = "Interest Expense")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 44442d3d-8b6c-4f70-b358-5837a2a33895
+
+	/// Net profit before the tax charge.
+	measure 'Profit Before Tax' = [Net Profit] - [Tax Expense]
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: 0d81dc2b-f126-4a89-bb12-ff396fbf097e
+
+	/// Income tax charge, shown as a negative value.
+	measure 'Tax Expense' = CALCULATE([Ledger Amount], 'Account'[Subclass] = "Taxation")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: c228a110-99bf-44ad-886e-da3ddc055676
+
+	/// Result of all profit and loss accounts after interest and tax.
+	measure 'Net Profit' = CALCULATE([Ledger Amount], 'Account'[Report] = "Profit and Loss")
+		formatString: #,##0
+		displayFolder: Profit and Loss
+		lineageTag: e8ddb3bc-4699-4f91-8e54-4d93cbe13494
+
+	/// Gross profit as a share of net sales.
+	measure 'Gross Margin (%)' = DIVIDE([Gross Profit], [Net Sales])
+		formatString: 0.00%
+		displayFolder: Profit and Loss\Margins
+		lineageTag: 81373cd0-97ad-46a9-a360-dfe6d690f937
+
+	/// EBITDA (earnings before interest, tax, depreciation, and amortization) as a share of net sales.
+	measure 'EBITDA Margin (%)' = DIVIDE([EBITDA], [Net Sales])
+		formatString: 0.00%
+		displayFolder: Profit and Loss\Margins
+		lineageTag: 76f10935-6100-4834-a82a-f4118266612e
+
+	/// Operating profit as a share of net sales.
+	measure 'Operating Margin (%)' = DIVIDE([Operating Profit], [Net Sales])
+		formatString: 0.00%
+		displayFolder: Profit and Loss\Margins
+		lineageTag: 113f7afc-63e8-4c0b-a7e6-c297351f0449
+
+	/// Net profit as a share of net sales.
+	measure 'Net Margin (%)' = DIVIDE([Net Profit], [Net Sales])
+		formatString: 0.00%
+		displayFolder: Profit and Loss\Margins
+		lineageTag: 3544420a-77ea-425c-947e-6ed5d8d19345
+
+	/// Net sales for the same period one year earlier.
+	measure 'Net Sales (ly)' = CALCULATE([Net Sales], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: b561582c-627c-4e0d-8fa4-a2fbf8f24d47
+
+	/// Net sales from the start of the year to the end of the selected period.
+	measure 'Net Sales (ytd)' = CALCULATE([Net Sales], DATESYTD('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: a1bee309-2d12-4011-929a-8321fe8b6997
+
+	/// Change in net sales against the same period one year earlier. Blank when there is no prior-year value.
+	measure 'Net Sales Growth (%)' =
+			VAR _current = [Net Sales]
+			VAR _prior = [Net Sales (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: d7d4997b-3b71-4e02-b7be-49d078cd3b47
+
+	/// Net profit for the same period one year earlier.
+	measure 'Net Profit (ly)' = CALCULATE([Net Profit], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 1b1508b3-754f-4f26-a834-afcd49b33eda
+
+	/// Net profit from the start of the year to the end of the selected period.
+	measure 'Net Profit (ytd)' = CALCULATE([Net Profit], DATESYTD('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 1d96855e-6df3-4d9d-8f7a-c830bdbfe8c7
+
+	/// Change in net profit against the same period one year earlier. Uses the absolute prior value so the direction stays correct after a loss.
+	measure 'Net Profit Growth (%)' =
+			VAR _current = [Net Profit]
+			VAR _prior = [Net Profit (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: 8dcd3190-1dc9-465e-bf37-8f854e71afe3
+
+	/// Cumulative ledger balance from the first posting to the last date in the selected period. Use with balance sheet accounts.
+	measure 'Closing Balance' =
+			VAR _lastDate = MAX('Date'[Date])
+			RETURN
+			    CALCULATE(
+			        [Ledger Amount],
+			        REMOVEFILTERS('Date'),
+			        'Date'[Date] <= _lastDate
+			    )
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: cb6a8eec-9855-44e6-9ef6-d169d2b2ec8c
+
+	/// Total assets at the end of the selected period.
+	measure 'Total Assets' = CALCULATE([Closing Balance], 'Account'[Class] = "Assets")
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: f6cb91ce-cdbc-4d2a-ac47-b259df79c945
+
+	/// Assets expected to turn into cash within one year, at the end of the selected period.
+	measure 'Current Assets' = CALCULATE([Closing Balance], 'Account'[Subclass Detail] = "Current Assets")
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: 91b44b07-e1e3-46a5-a7aa-20672298aa87
+
+	/// Cash at bank and cash in hand at the end of the selected period.
+	measure 'Cash Balance' = CALCULATE([Closing Balance], 'Account'[Account] = "Cash & Cash Equivalents")
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: 7535b445-0790-4e2a-92c1-69215c4918a1
+
+	/// Total liabilities at the end of the selected period.
+	measure 'Total Liabilities' = CALCULATE([Closing Balance], 'Account'[Subclass] = "Liabilities")
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: 1db2b601-a7b9-4002-bc57-5097f321f7f1
+
+	/// Liabilities due within one year, at the end of the selected period.
+	measure 'Current Liabilities' = CALCULATE([Closing Balance], 'Account'[Subclass Detail] = "Current Liabilities")
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: f1f19f22-4f93-487a-89f6-2851ea955b56
+
+	/// Share capital, retained earnings, and dividends at the end of the selected period.
+	measure 'Total Equity' = CALCULATE([Closing Balance], 'Account'[Subclass] = "Owners Equity")
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: d552924a-3985-4f70-9112-2e57d54e863f
+
+	/// Total liabilities plus total equity at the end of the selected period.
+	measure 'Total Liabilities and Equity' = [Total Liabilities] + [Total Equity]
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: 100672b0-c6aa-4dab-9571-b0448fe7b63e
+
+	/// Total assets less total liabilities and equity. Zero at each month end. Other days can differ because net profit moves to retained earnings monthly.
+	measure 'Balance Check' = [Total Assets] - [Total Liabilities and Equity]
+		formatString: #,##0
+		displayFolder: Balance Sheet
+		lineageTag: 74c4cf8c-d0e3-4007-9572-435f10817fd7
+
+	/// Current assets less current liabilities.
+	measure 'Working Capital' = [Current Assets] - [Current Liabilities]
+		formatString: #,##0
+		displayFolder: Balance Sheet\Ratios
+		lineageTag: 261aa931-a746-4bf2-a641-37cf35f7f16f
+
+	/// Current assets divided by current liabilities.
+	measure 'Current Ratio' = DIVIDE([Current Assets], [Current Liabilities])
+		formatString: #,##0.00
+		displayFolder: Balance Sheet\Ratios
+		lineageTag: 1634ad58-1e12-41b9-83e4-0ce5cc018145
+
+	/// Total liabilities divided by total equity.
+	measure 'Liabilities to Equity Ratio' = DIVIDE([Total Liabilities], [Total Equity])
+		formatString: #,##0.00
+		displayFolder: Balance Sheet\Ratios
+		lineageTag: bf4350bb-c8ec-4eed-a2c7-e1d88472184f
+
+	/// EBITDA (earnings before interest, tax, depreciation, and amortization) for the same period one year earlier.
+	measure 'EBITDA (ly)' = CALCULATE([EBITDA], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 1f51e436-70c4-47ab-b15f-d054cf706165
+
+	/// Change in EBITDA against the same period one year earlier. Blank when there is no prior-year value.
+	measure 'EBITDA Growth (%)' =
+			VAR _current = [EBITDA]
+			VAR _prior = [EBITDA (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: af930afb-65cf-419c-b74e-a01434c5eefc
+
+	/// Operating expenses for the same period one year earlier, shown as a negative value.
+	measure 'Operating Expenses (ly)' = CALCULATE([Operating Expenses], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 35064c5d-5fb1-4d7f-9f5a-c446207ac018
+
+	/// Change in the size of operating expenses against one year earlier. A positive value means costs grew.
+	measure 'Operating Expenses Growth (%)' =
+			VAR _current = ABS([Operating Expenses])
+			VAR _prior = ABS([Operating Expenses (ly)])
+			RETURN
+			    DIVIDE(_current - _prior, _prior)
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: f552111a-95bc-4c67-a23b-ff9cb60fd463
+
+	/// Growth in operating expenses against one year earlier, shown as a positive value when costs grew.
+	measure 'Operating Expenses Increase' =
+			VAR _prior = [Operating Expenses (ly)]
+			RETURN
+			    IF(NOT ISBLANK(_prior), _prior - [Operating Expenses])
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 22b1098d-33a5-4722-ae9d-81cfb0f63f98
+
+	/// Net margin for the same period one year earlier.
+	measure 'Net Margin (ly)' = CALCULATE([Net Margin (%)], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: ffd8136f-db67-4c6f-bff0-1cafea7c59fc
+
+	/// Change in net margin against one year earlier, in percentage points.
+	measure 'Net Margin Change (pp)' =
+			VAR _prior = [Net Margin (ly)]
+			RETURN
+			    IF(NOT ISBLANK(_prior), ([Net Margin (%)] - _prior) * 100)
+		formatString: 0.00
+		displayFolder: Time Intelligence
+		lineageTag: b4c7a8c1-cc79-4b16-93ea-8925c7809ac9
+
+	/// Cash balance at the end of the same period one year earlier.
+	measure 'Cash Balance (ly)' = CALCULATE([Cash Balance], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 4d1a336c-cd3e-4bdc-9bb9-665a38c89b29
+
+	/// Change in the cash balance against one year earlier. Blank when there is no prior-year value.
+	measure 'Cash Balance Growth (%)' =
+			VAR _current = [Cash Balance]
+			VAR _prior = [Cash Balance (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: 5f3b60f8-f234-427a-90f9-26aa348ae8e6
+
+	/// Total assets at the end of the same period one year earlier.
+	measure 'Total Assets (ly)' = CALCULATE([Total Assets], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 11f000c0-5e0c-4b67-a003-e3acd2c478e9
+
+	/// Change in total assets against one year earlier. Blank when there is no prior-year value.
+	measure 'Total Assets Growth (%)' =
+			VAR _current = [Total Assets]
+			VAR _prior = [Total Assets (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: d5c05331-449e-484d-b87d-9ddfa26a5134
+
+	/// Total liabilities at the end of the same period one year earlier.
+	measure 'Total Liabilities (ly)' = CALCULATE([Total Liabilities], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: a0af523e-6ae3-41fa-a73e-09cbb37e6596
+
+	/// Change in total liabilities against one year earlier. Blank when there is no prior-year value.
+	measure 'Total Liabilities Growth (%)' =
+			VAR _current = [Total Liabilities]
+			VAR _prior = [Total Liabilities (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: d837b8fc-7694-4ea2-8942-c4ddd69bb5c5
+
+	/// Total equity at the end of the same period one year earlier.
+	measure 'Total Equity (ly)' = CALCULATE([Total Equity], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		displayFolder: Time Intelligence
+		lineageTag: 5ff1e61d-660f-40ba-864b-0f38cf47357f
+
+	/// Change in total equity against one year earlier. Blank when there is no prior-year value.
+	measure 'Total Equity Growth (%)' =
+			VAR _current = [Total Equity]
+			VAR _prior = [Total Equity (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		displayFolder: Time Intelligence
+		lineageTag: 683509a4-8654-4a4d-98e1-13b4ebf098aa
+
+	/// Text naming the comparison year, such as vs 2019. Blank unless one year is selected.
+	measure 'Comparison Label' = IF(HASONEVALUE('Date'[Year]), "vs " & (VALUES('Date'[Year]) - 1))
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 9c085661-b4ea-4834-b02f-17ee5a6b6b23
+
+	/// Text naming the countries in the current selection.
+	measure 'Scope Label' =
+			VAR _selected = COUNTROWS(VALUES('Territory'[Country]))
+			VAR _all = COUNTROWS(ALL('Territory'[Country]))
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        _selected = _all, "all countries",
+			        _selected = 1, SELECTEDVALUE('Territory'[Country]),
+			        _selected & " countries"
+			    )
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 8f5c2594-a600-4808-9e79-47a518953b75
+
+	/// Text naming the selected year, its comparison year, and the countries in scope.
+	measure 'Period Label' =
+			VAR _year = SELECTEDVALUE('Date'[Year])
+			VAR _period =
+			    SWITCH(
+			        TRUE(),
+			        ISBLANK(_year), "2018 to 2020",
+			        ISBLANK([Net Sales (ly)]), FORMAT(_year, "0"),
+			        _year & " compared with " & (_year - 1)
+			    )
+			RETURN
+			    _period & ", " & [Scope Label] & "."
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 80a96e33-885c-494d-b83d-66afe38ba1d3
+
+	/// Card text showing the change in net sales against the prior year.
+	measure 'Net Sales Change Label' =
+			VAR _change = [Net Sales Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 3b004840-1437-4c3b-9f18-c065c08e6650
+
+	/// Card text showing the change in EBITDA against the prior year.
+	measure 'EBITDA Change Label' =
+			VAR _change = [EBITDA Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 4e0332c7-e349-4736-9a41-736c789ab9ff
+
+	/// Card text showing the change in net profit against the prior year.
+	measure 'Net Profit Change Label' =
+			VAR _change = [Net Profit Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 7dcf62db-e9a4-4159-8b93-564f5efadf6e
+
+	/// Card text showing the change in net margin against the prior year, in percentage points.
+	measure 'Net Margin Change Label' =
+			VAR _change = [Net Margin Change (pp)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.00") & " pp " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: b35fbf2f-f9ac-4f25-8213-499fa8aa9a10
+
+	/// Card text showing the change in the cash balance against the prior year.
+	measure 'Cash Balance Change Label' =
+			VAR _change = [Cash Balance Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: f18fc809-cd23-4e24-83d6-b539c927bf9d
+
+	/// Card text showing the change in total assets against the prior year.
+	measure 'Total Assets Change Label' =
+			VAR _change = [Total Assets Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 393c5cd4-c214-4f89-b36f-02d88cb53783
+
+	/// Card text showing the change in total liabilities against the prior year.
+	measure 'Total Liabilities Change Label' =
+			VAR _change = [Total Liabilities Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 2cc5d840-7a82-431f-a179-2fcfb27ebc28
+
+	/// Card text showing the change in total equity against the prior year.
+	measure 'Total Equity Change Label' =
+			VAR _change = [Total Equity Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: dc6f22e5-10d8-45c2-a484-fcc88291f7da
+
+	/// Card text showing the change in operating cash flow against the prior year.
+	measure 'Operating Cash Flow Change Label' =
+			VAR _change = [Operating Cash Flow Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 6f5263fb-8bb4-4e51-9de2-21a137fcc416
+
+	/// Card text showing the change in the size of investing outflow against the prior year.
+	measure 'Investing Cash Flow Change Label' =
+			VAR _change = [Investing Outflow Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " outflow " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: c162f3af-c44e-46d3-84b3-76134de75adc
+
+	/// Card text showing the change in financing cash flow against the prior year.
+	measure 'Financing Cash Flow Change Label' =
+			VAR _change = [Financing Cash Flow Growth (%)]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "0.0%") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 3e770b16-0d05-4f8e-8819-fe9f4cb798e3
+
+	/// Card text showing the change in net cash flow against the prior year, as an amount.
+	measure 'Net Cash Flow Change Label' =
+			VAR _change = [Net Cash Flow Change]
+			RETURN
+			    IF(ISBLANK(_change), "No prior year", IF(_change >= 0, "▲ ", "▼ ") & FORMAT(ABS(_change), "#,##0") & " " & [Comparison Label])
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 756de1a7-1540-4297-80cb-a2caddec630e
+
+	/// Headline of the Overview page. Follows the selected year and countries.
+	measure 'Overview Title' =
+			VAR _sales = [Net Sales Growth (%)]
+			VAR _profit = [Net Profit Growth (%)]
+			RETURN
+			    IF(
+			        ISBLANK(_sales) || ISBLANK(_profit),
+			        "Net sales of " & FORMAT([Net Sales], "#,##0") & " and net profit of " & FORMAT([Net Profit], "#,##0"),
+			        "Sales " & IF(_sales >= 0, "grew ", "fell ") & FORMAT(ABS(_sales), "0.0%")
+			            & IF((_sales >= 0) = (_profit >= 0), ", and net profit ", ", but net profit ")
+			            & IF(_profit >= 0, "grew ", "fell ") & FORMAT(ABS(_profit), "0.0%")
+			    )
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 7fa8f7b4-03cf-4a3d-b899-dc812b183f37
+
+	/// Subtitle of the Overview page.
+	measure 'Overview Subtitle' = [Period Label]
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: a5d04dca-7a4d-4d06-8cec-171282f426e3
+
+	/// Headline of the Profit and Loss page. Follows the selected year and countries.
+	measure 'Profit and Loss Title' =
+			VAR _costs = [Operating Expenses Growth (%)]
+			VAR _sales = [Net Sales Growth (%)]
+			RETURN
+			    IF(
+			        ISBLANK(_costs) || ISBLANK(_sales),
+			        "Operating expenses of " & FORMAT(ABS([Operating Expenses]), "#,##0") & " on net sales of " & FORMAT([Net Sales], "#,##0"),
+			        "Operating expenses " & IF(_costs >= 0, "grew ", "fell ") & FORMAT(ABS(_costs), "0.0%")
+			            & ", while sales " & IF(_sales >= 0, "grew ", "fell ") & FORMAT(ABS(_sales), "0.0%")
+			    )
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: f00c3c21-9c86-475e-b412-39fa2d542e60
+
+	/// Subtitle of the Profit and Loss page.
+	measure 'Profit and Loss Subtitle' =
+			VAR _current = [Net Margin (%)]
+			VAR _prior = [Net Margin (ly)]
+			VAR _margin =
+			    IF(
+			        ISBLANK(_prior),
+			        "Net margin of " & FORMAT(_current, "0.00%"),
+			        "Net margin " & IF(_current >= _prior, "rose", "fell") & " from " & FORMAT(_prior, "0.00%") & " to " & FORMAT(_current, "0.00%")
+			    )
+			RETURN
+			    _margin & ". " & [Period Label]
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 5e544a18-94bd-4832-ae51-9c850a789d79
+
+	/// Headline of the Countries page. Names the countries with a net loss in the selection.
+	measure 'Countries Title' =
+			VAR _countries = ADDCOLUMNS(VALUES('Territory'[Country]), "@Profit", [Net Profit])
+			VAR _losses = FILTER(_countries, [@Profit] < 0)
+			VAR _lossCount = COUNTROWS(_losses) + 0
+			VAR _countryCount = COUNTROWS(_countries)
+			VAR _year = COALESCE(SELECTEDVALUE('Date'[Year]) & "", "2018 to 2020")
+			RETURN
+			    IF(
+			        _lossCount > 0,
+			        _lossCount & " of " & _countryCount & " countries lost money in " & _year & ": "
+			            & CONCATENATEX(_losses, 'Territory'[Country], ", ", [@Profit], ASC),
+			        "All " & _countryCount & " countries were profitable in " & _year
+			    )
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 5fc1f8ad-c14c-42de-ae95-37cfa9195b24
+
+	/// Subtitle of the Countries page. Compares total losses with total profits across countries.
+	measure 'Countries Subtitle' =
+			VAR _countries = ADDCOLUMNS(VALUES('Territory'[Country]), "@Profit", [Net Profit])
+			VAR _losses = FILTER(_countries, [@Profit] < 0)
+			VAR _profits = FILTER(_countries, [@Profit] >= 0)
+			VAR _lossTotal = SUMX(_losses, [@Profit])
+			VAR _profitTotal = SUMX(_profits, [@Profit])
+			RETURN
+			    IF(
+			        COUNTROWS(_losses) > 0,
+			        "Together they lost " & FORMAT(ABS(_lossTotal), "#,##0") & ", while the other " & (COUNTROWS(_profits) + 0) & " earned " & FORMAT(_profitTotal + 0, "#,##0") & ".",
+			        "Net profit of " & FORMAT([Net Profit], "#,##0") & " across the selection."
+			    )
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 7cfcfe7d-702c-4cc2-a824-201b70e2cc7d
+
+	/// Headline of the Balance Sheet page.
+	measure 'Balance Sheet Title' = "Equity funds " & FORMAT(DIVIDE([Total Equity], [Total Assets]), "0%") & " of total assets"
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 9d7269a9-e5a1-431c-bbb8-6215dcf7f29d
+
+	/// Subtitle of the Balance Sheet page.
+	measure 'Balance Sheet Subtitle' = "Liabilities stand at " & FORMAT([Liabilities to Equity Ratio], "0.00") & " per unit of equity. Position at " & FORMAT(MAX('Date'[Date]), "d MMMM yyyy") & ", " & [Scope Label] & "."
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: ab30ce6e-a0e7-46e8-9617-3e056efade5b
+
+	/// Headline of the Cash Flow page. Follows the selected year and countries.
+	measure 'Cash Flow Title' =
+			VAR _net = [Net Cash Flow]
+			VAR _amount = FORMAT(ABS(_net), "#,##0")
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        _net >= 0, "Cash rose " & _amount,
+			        [Investing Cash Flow] < 0 && [Operating Cash Flow] + [Financing Cash Flow] > 0, "Investing outran cash generated, so cash fell " & _amount,
+			        "Cash fell " & _amount
+			    )
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 901b7033-927c-464a-9050-eaa7b8a1a481
+
+	/// Subtitle of the Cash Flow page. Compares working capital movements with the prior year.
+	measure 'Cash Flow Subtitle' =
+			VAR _current = [Working Capital Changes]
+			VAR _prior = CALCULATE([Working Capital Changes], SAMEPERIODLASTYEAR('Date'[Date]))
+			VAR _year = SELECTEDVALUE('Date'[Year])
+			RETURN
+			    "Working capital changes of " & FORMAT(_current, "#,##0")
+			        & IF(NOT ISBLANK(_prior), ", against " & FORMAT(_prior, "#,##0") & " in " & (_year - 1))
+			        & ". " & [Period Label]
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: cadb55ae-3262-4c6a-a32a-ef920fdb6f3a
+
+	/// Bar and marker color for net profit. Losses use the warning color.
+	measure 'Net Profit Color' = IF([Net Profit] < 0, "#C2570C", "#1F5FA8")
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: e6debe3d-164c-4c3c-af7c-9587a58703f2
+
+	/// Bar color for the increase in operating expenses. The account with the largest increase is highlighted.
+	measure 'Operating Expenses Increase Color' =
+			VAR _current = [Operating Expenses Increase]
+			VAR _largest = MAXX(ALLSELECTED('Account'[Account]), [Operating Expenses Increase])
+			RETURN
+			    IF(_current = _largest, "#C2570C", "#A9B4C0")
+		isHidden
+		displayFolder: Report Labels
+		lineageTag: 3ac960e5-7862-4397-8284-6ac8c6737409
+
+	/// Posting date. Links the entry to the Date table.
+	column Date
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		isAvailableInMdx: false
+		lineageTag: 13164888-3313-4122-bb91-68ef2a44ac07
+		summarizeBy: none
+		sourceColumn: Date
+
+	/// Territory of the posting. Links the entry to the Territory table.
+	column 'Territory Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: ee768992-2e1c-47f5-9440-1142234605a9
+		summarizeBy: none
+		sourceColumn: Territory Key
+
+	/// Account of the posting. Links the entry to the Account table.
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 2791a523-359b-4c8f-8595-04ec4480b98e
+		summarizeBy: none
+		sourceColumn: Account Key
+
+	/// Business event behind the posting, such as Credit Sales or Inventory Purchase.
+	column 'Transaction Type'
+		dataType: string
+		lineageTag: 31ec1165-0c6d-4599-9648-6caafe5502f3
+		summarizeBy: none
+		sourceColumn: Transaction Type
+
+	/// Signed posting amount. Use the measures in this table instead of this column.
+	column Amount
+		dataType: decimal
+		isHidden
+		formatString: #,##0
+		lineageTag: c8e206ff-2ed8-497a-952b-701f6ea7a9f7
+		summarizeBy: none
+		sourceColumn: Amount
+
+	partition 'General Ledger' = m
+		mode: import
+		source =
+				let
+				    // Opened the source workbook and selected the general ledger table
+				    #"Opened Workbook" = Excel.Workbook(File.Contents(#"Source File Path"), null, true),
+				    #"Selected Ledger Table" = #"Opened Workbook"{[Item = "tbl_GL", Kind = "Table"]}[Data],
+				    // Removed the worksheet total line, which has an amount but no date
+				    #"Removed Total Row" = Table.SelectRows(#"Selected Ledger Table", each [Date] <> null),
+				    // Dropped the source line index because it is not unique and has no analytical use
+				    #"Selected Columns" = Table.SelectColumns(#"Removed Total Row", {"Date", "Territory_key", "Account_key", "Details", "Amount"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Selected Columns", {{"Territory_key", "Territory Key"}, {"Account_key", "Account Key"}, {"Details", "Transaction Type"}}),
+				    #"Changed Types" = Table.TransformColumnTypes(#"Renamed Columns", {{"Date", type date}, {"Territory Key", Int64.Type}, {"Account Key", Int64.Type}, {"Transaction Type", type text}, {"Amount", Currency.Type}})
+				in
+				    #"Changed Types"
+

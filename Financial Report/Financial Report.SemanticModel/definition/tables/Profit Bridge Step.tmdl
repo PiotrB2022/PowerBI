@@ -1,0 +1,56 @@
+/// Steps of the net profit bridge from the prior year to the selected year. One row per step. No relationships, because the bridge measure picks the step by its order.
+table 'Profit Bridge Step'
+	lineageTag: 72595620-6683-47c3-aca6-042ef796ba2b
+
+	/// Net profit bridge value for the current step. The first step is prior-year net profit, and the others are the change in each income statement group. All steps add up to net profit of the selected period.
+	measure 'Profit Bridge Amount' =
+			VAR _priorDates = SAMEPERIODLASTYEAR('Date'[Date])
+			RETURN
+			    SWITCH(
+			        SELECTEDVALUE('Profit Bridge Step'[Step Order]),
+			        1, [Net Profit (ly)],
+			        2, [Net Sales] - [Net Sales (ly)],
+			        3, [Cost of Sales] - CALCULATE([Cost of Sales], _priorDates),
+			        4, [Operating Expenses] - [Operating Expenses (ly)],
+			        5, [Depreciation and Amortization] - CALCULATE([Depreciation and Amortization], _priorDates),
+			        6, [Non-Operating Income] - CALCULATE([Non-Operating Income], _priorDates),
+			        7, [Interest Expense] - CALCULATE([Interest Expense], _priorDates),
+			        8, [Tax Expense] - CALCULATE([Tax Expense], _priorDates)
+			    )
+		formatString: #,##0
+		lineageTag: f675e6c6-7926-4a6d-b1eb-1604a0cab982
+
+	/// Step of the net profit bridge shown on the waterfall axis.
+	column Step
+		lineageTag: 8be93129-bc46-4b4a-aace-bfed6edc318e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Step]
+		sortByColumn: 'Step Order'
+
+	/// Position of the step in the net profit bridge.
+	column 'Step Order'
+		isHidden
+		lineageTag: 7c8904bd-644b-4b7f-b864-e6aa2139073c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Step Order]
+
+	partition 'Profit Bridge Step' = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "Step", STRING,
+				    "Step Order", INTEGER,
+				    {
+				        { "Prior Year Net Profit", 1 },
+				        { "Net Sales", 2 },
+				        { "Cost of Sales", 3 },
+				        { "Operating Expenses", 4 },
+				        { "Depreciation and Amortization", 5 },
+				        { "Non-Operating Income", 6 },
+				        { "Interest Expense", 7 },
+				        { "Tax Expense", 8 }
+				    }
+				)
+

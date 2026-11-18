@@ -1,0 +1,100 @@
+/// Layout of the income statement on the Profit and Loss page. One row per statement line. No relationships, because the measures in this table pick the line by its order.
+table 'Income Statement Line'
+	lineageTag: 8efe2414-7a0e-409a-a189-e9a5b7d26d97
+
+	/// Amount of the income statement line in the current row. Blank outside a single line.
+	measure 'Income Statement Amount' =
+			SWITCH(
+			    SELECTEDVALUE('Income Statement Line'[Line Order]),
+			    1, [Net Sales],
+			    2, [Cost of Sales],
+			    3, [Gross Profit],
+			    4, [Operating Expenses],
+			    5, [EBITDA],
+			    6, [Depreciation and Amortization],
+			    7, [Operating Profit],
+			    8, [Non-Operating Income],
+			    9, [Interest Expense],
+			    10, [Profit Before Tax],
+			    11, [Tax Expense],
+			    12, [Net Profit]
+			)
+		formatString: #,##0
+		lineageTag: 7d0a36ec-b289-4274-ae59-f30011526f7d
+
+	/// Amount of the income statement line for the same period one year earlier.
+	measure 'Income Statement Amount (ly)' = CALCULATE([Income Statement Amount], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		lineageTag: a58472c7-b196-4eed-aae6-62e33ee1b6ad
+
+	/// Change in the income statement line against one year earlier. Cost lines compare size, so a positive value means costs grew.
+	measure 'Income Statement Change (%)' =
+			VAR _current = [Income Statement Amount]
+			VAR _prior = [Income Statement Amount (ly)]
+			VAR _isCost = SELECTEDVALUE('Income Statement Line'[Line Order]) IN { 2, 4, 6, 9, 11 }
+			RETURN
+			    IF(
+			        _isCost,
+			        DIVIDE(ABS(_current) - ABS(_prior), ABS(_prior)),
+			        DIVIDE(_current - _prior, ABS(_prior))
+			    )
+		formatString: 0.00%
+		lineageTag: 954013fa-6c3a-4fe5-99d3-46dd4ec4d63f
+
+	/// Size of the income statement line as a share of net sales.
+	measure 'Income Statement Share of Sales (%)' = DIVIDE(ABS([Income Statement Amount]), [Net Sales])
+		formatString: 0.00%
+		lineageTag: 70749712-71af-41bb-9250-89c491d1c302
+
+	/// Row background for the income statement matrix. Subtotal lines are tinted.
+	measure 'Income Statement Row Color' = IF(SELECTEDVALUE('Income Statement Line'[Is Subtotal]) = "Yes", "#F3F5F8", "#FFFFFF")
+		isHidden
+		lineageTag: 5c919074-cb03-47d5-bad9-3ceae352a024
+
+	/// Income statement line shown in the statement matrix.
+	column Line
+		lineageTag: a5724ee9-8b24-4341-a485-173739aa14be
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Line]
+		sortByColumn: 'Line Order'
+
+	/// Position of the line in the income statement.
+	column 'Line Order'
+		isHidden
+		lineageTag: e408699a-6df4-4b56-97af-27ce31e1c2e7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Line Order]
+
+	/// Yes for subtotal lines, which get a tinted row.
+	column 'Is Subtotal'
+		isHidden
+		lineageTag: cc2b75a6-4d4a-4cdf-b775-dec8f0e7d68e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Is Subtotal]
+
+	partition 'Income Statement Line' = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "Line", STRING,
+				    "Line Order", INTEGER,
+				    "Is Subtotal", STRING,
+				    {
+				        { "Net Sales", 1, "Yes" },
+				        { "Cost of Sales", 2, "No" },
+				        { "Gross Profit", 3, "Yes" },
+				        { "Operating Expenses", 4, "No" },
+				        { "EBITDA", 5, "Yes" },
+				        { "Depreciation and Amortization", 6, "No" },
+				        { "Operating Profit", 7, "Yes" },
+				        { "Non-Operating Income", 8, "No" },
+				        { "Interest Expense", 9, "No" },
+				        { "Profit Before Tax", 10, "Yes" },
+				        { "Tax Expense", 11, "No" },
+				        { "Net Profit", 12, "Yes" }
+				    }
+				)
+

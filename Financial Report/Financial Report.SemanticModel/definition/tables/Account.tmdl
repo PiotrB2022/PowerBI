@@ -1,0 +1,97 @@
+/// Chart of accounts. One row per ledger account, grouped from financial report down to subaccount.
+table Account
+	lineageTag: 4381d67e-0ec2-46e7-bd80-d2205de1bac9
+
+	/// Unique account identifier. Links the account to the general ledger.
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		isKey
+		isAvailableInMdx: false
+		lineageTag: f999744e-68a6-407d-88a7-4876d357f72a
+		summarizeBy: none
+		sourceColumn: Account Key
+
+	/// Financial report the account belongs to: Balance Sheet, Profit and Loss, or Adjusting.
+	column Report
+		dataType: string
+		lineageTag: 75144500-46d1-4f89-9e89-a269a1da8492
+		summarizeBy: none
+		sourceColumn: Report
+
+	/// Top-level grouping within a report, such as Assets or Trading account.
+	column Class
+		dataType: string
+		lineageTag: 042d1133-f03d-4eae-aea4-5f659380a231
+		summarizeBy: none
+		sourceColumn: Class
+
+	/// Grouping within a class, such as Sales, Liabilities, or Operating Expenses.
+	column Subclass
+		dataType: string
+		lineageTag: fe3b9e3e-0ef1-48f3-89f0-7bf8c24f0007
+		summarizeBy: none
+		sourceColumn: Subclass
+
+	/// Detailed grouping within a subclass, such as Current Assets or Marketing.
+	column 'Subclass Detail'
+		dataType: string
+		lineageTag: 5bc19498-b73c-40f4-8f06-29ac20f41a7f
+		summarizeBy: none
+		sourceColumn: Subclass Detail
+
+	/// Account name. Several subaccounts can share one account.
+	column Account
+		dataType: string
+		lineageTag: 3201be98-5800-4574-a077-95a446e1f948
+		summarizeBy: none
+		sourceColumn: Account
+
+	/// Lowest level of the chart of accounts. Each subaccount maps to one account key.
+	column Subaccount
+		dataType: string
+		lineageTag: a95b9ebc-a199-463f-998a-38ac239207a4
+		summarizeBy: none
+		sourceColumn: Subaccount
+
+	/// Drill-down path through the chart of accounts.
+	hierarchy 'Account Hierarchy'
+		lineageTag: 1b8be957-1412-414c-b47c-d89080305746
+
+		level Report
+			lineageTag: c8167b78-66b2-4480-8bdf-86ff890b7c01
+			column: Report
+
+		level Class
+			lineageTag: 7dde7e92-a616-42ec-959e-bb0adf5d9ddd
+			column: Class
+
+		level Subclass
+			lineageTag: 8685923f-fb9f-453d-8b9f-537fe17b896f
+			column: Subclass
+
+		level 'Subclass Detail'
+			lineageTag: d915c790-7a86-45da-a15a-949762d3a7b5
+			column: 'Subclass Detail'
+
+		level Account
+			lineageTag: f3c728d4-7e75-4b81-b434-3b6051b51f3e
+			column: Account
+
+		level Subaccount
+			lineageTag: 12c5b5c7-71f0-4d92-add5-9b4c9a238cd7
+			column: Subaccount
+
+	partition Account = m
+		mode: import
+		source =
+				let
+				    // Opened the source workbook and selected the chart of accounts table
+				    #"Opened Workbook" = Excel.Workbook(File.Contents(#"Source File Path"), null, true),
+				    #"Selected Accounts Table" = #"Opened Workbook"{[Item = "tbl_ChartofAccounts", Kind = "Table"]}[Data],
+				    // Replaced technical source names with business-friendly names
+				    #"Renamed Columns" = Table.RenameColumns(#"Selected Accounts Table", {{"Account_key", "Account Key"}, {"SubClass", "Subclass"}, {"SubClass2", "Subclass Detail"}, {"SubAccount", "Subaccount"}}),
+				    #"Changed Types" = Table.TransformColumnTypes(#"Renamed Columns", {{"Account Key", Int64.Type}, {"Report", type text}, {"Class", type text}, {"Subclass", type text}, {"Subclass Detail", type text}, {"Account", type text}, {"Subaccount", type text}})
+				in
+				    #"Changed Types"
+

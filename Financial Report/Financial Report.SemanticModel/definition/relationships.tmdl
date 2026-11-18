@@ -1,0 +1,12 @@
+relationship 'General Ledger to Date'
+	fromColumn: 'General Ledger'.Date
+	toColumn: Date.Date
+
+relationship 'General Ledger to Account'
+	fromColumn: 'General Ledger'.'Account Key'
+	toColumn: Account.'Account Key'
+
+relationship 'General Ledger to Territory'
+	fromColumn: 'General Ledger'.'Territory Key'
+	toColumn: Territory.'Territory Key'
+

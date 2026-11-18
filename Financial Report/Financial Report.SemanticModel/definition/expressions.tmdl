@@ -1,0 +1,4 @@
+/// Full path to the Excel workbook that feeds every table in this model.
+expression 'Source File Path' = "C:\Users\barej\Desktop\Claude Space\Power BI\Finacial_Data.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: e5f41e37-ad8d-469e-9a71-8f6866da0b95
+

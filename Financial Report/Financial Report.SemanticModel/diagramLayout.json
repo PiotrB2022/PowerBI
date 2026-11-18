@@ -5,9 +5,125 @@
       "ordinal": 0,
       "scrollPosition": {
         "x": 0,
-        "y": 0
+        "y": 100
       },
-      "nodes": [],
+      "nodes": [
+        {
+          "location": {
+            "x": 749.63088471965034,
+            "y": 86.463603904903721
+          },
+          "nodeIndex": "Account",
+          "nodeLineageTag": "4381d67e-0ec2-46e7-bd80-d2205de1bac9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 890.63088471965023,
+            "y": 440.23180195245186
+          },
+          "nodeIndex": "Cash Flow Statement",
+          "nodeLineageTag": "b9376ea8-ed05-499d-b740-8b0f11c81108",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 455.76464982287087,
+            "y": -50
+          },
+          "nodeIndex": "Date",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1002.6308847196501,
+            "y": 105.23180195245186
+          },
+          "nodeIndex": "Equity Statement",
+          "nodeLineageTag": "c4ca4361-7706-4012-93c1-0c1cf2f603b4",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 296.65368673700021,
+            "y": 640.70507901698181
+          },
+          "nodeIndex": "General Ledger",
+          "nodeLineageTag": "1bb26e42-6e3f-4761-a942-96372c16afe4",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 144.63005268311883
+          },
+          "nodeIndex": "Territory",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1236.63088471965,
+            "y": 419.35253950849091
+          },
+          "nodeIndex": "Balance Sheet Line",
+          "nodeLineageTag": "279881b6-a877-415e-9e7b-367024df21a3",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1520.63088471965,
+            "y": 419.35253950849091
+          },
+          "nodeIndex": "Income Statement Line",
+          "nodeLineageTag": "8efe2414-7a0e-409a-a189-e9a5b7d26d97",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1804.63088471965,
+            "y": 431.35253950849091
+          },
+          "nodeIndex": "Profit Bridge Step",
+          "nodeLineageTag": "72595620-6683-47c3-aca6-042ef796ba2b",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
       "name": "All tables",
       "zoomValue": 100,
       "pinKeyFieldsToTop": false,

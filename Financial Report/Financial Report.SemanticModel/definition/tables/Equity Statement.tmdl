@@ -1,0 +1,95 @@
+/// Layout of the statement of changes in equity. One row per movement and equity component. Intentionally has no relationships: the Equity Statement Amount measure applies each row's account and calculation rule to the general ledger.
+table 'Equity Statement'
+	lineageTag: c4ca4361-7706-4012-93c1-0c1cf2f603b4
+
+	/// Statement value for the selected movements and period. Across several movements, the closing balance is left out so the total equals closing equity. Changes in accounting policy stay blank because the source has no rule for them.
+	measure 'Equity Statement Amount' =
+			VAR _firstDate = MIN('Date'[Date])
+			VAR _lastDate = MAX('Date'[Date])
+			VAR _isSingleMovement = HASONEVALUE('Equity Statement'[Equity Movement])
+			VAR _lines =
+			    FILTER(
+			        'Equity Statement',
+			        _isSingleMovement || 'Equity Statement'[Balance Type] <> "Closing_balance"
+			    )
+			RETURN
+			    SUMX(
+			        _lines,
+			        VAR _balanceType = 'Equity Statement'[Balance Type]
+			        VAR _accounts = TREATAS({ 'Equity Statement'[Account Key] }, 'Account'[Account Key])
+			        RETURN
+			            SWITCH(
+			                _balanceType,
+			                "FTP", CALCULATE([Ledger Amount], _accounts),
+			                "FTP_positive", CALCULATE([Ledger Amount], _accounts, 'General Ledger'[Amount] > 0),
+			                "FTP_negative", CALCULATE([Ledger Amount], _accounts, 'General Ledger'[Amount] < 0),
+			                "Opening_balance", CALCULATE([Ledger Amount], _accounts, REMOVEFILTERS('Date'), 'Date'[Date] < _firstDate),
+			                "Closing_balance", CALCULATE([Ledger Amount], _accounts, REMOVEFILTERS('Date'), 'Date'[Date] <= _lastDate)
+			            )
+			    )
+		formatString: #,##0
+		lineageTag: 5330a6dd-c4db-4b9e-8fa1-ebcf316f21d0
+
+	/// Statement row, such as Balance at the beginning, Dividends, or Issue of share capital.
+	column 'Equity Movement'
+		dataType: string
+		lineageTag: c5de3b19-c349-4bc3-be7d-78e46ac15c44
+		summarizeBy: none
+		sourceColumn: Equity Movement
+		sortByColumn: 'Movement Order'
+
+	/// Component of equity shown as a statement column, such as Share Capital or Retained Earnings.
+	column 'Equity Component'
+		dataType: string
+		lineageTag: 3d17f35b-1358-41bc-8167-11c00f227a42
+		summarizeBy: none
+		sourceColumn: Equity Component
+		sortByColumn: 'Component Order'
+
+	/// Calculation rule for the line. FTP means the selected period, and positive or negative keep only those postings.
+	column 'Balance Type'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 99613875-36f8-4a7b-8922-706aa7c6db24
+		summarizeBy: none
+		sourceColumn: Balance Type
+
+	/// Ledger account used by the line.
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: fc443508-0f70-47d9-a151-8ab2d89f2561
+		summarizeBy: none
+		sourceColumn: Account Key
+
+	/// Display order of the movements.
+	column 'Movement Order'
+		dataType: int64
+		isHidden
+		lineageTag: 14b9cac4-8160-436f-86df-0f38c49da0a7
+		summarizeBy: none
+		sourceColumn: Movement Order
+
+	/// Display order of the equity components.
+	column 'Component Order'
+		dataType: int64
+		isHidden
+		lineageTag: 42cabcbc-9916-4b4a-80af-65e775e80f9e
+		summarizeBy: none
+		sourceColumn: Component Order
+
+	partition 'Equity Statement' = m
+		mode: import
+		source =
+				let
+				    // Opened the source workbook and selected the equity statement layout table
+				    #"Opened Workbook" = Excel.Workbook(File.Contents(#"Source File Path"), null, true),
+				    #"Selected Equity Table" = #"Opened Workbook"{[Item = "tbl_SoCE_St", Kind = "Table"]}[Data],
+				    // Replaced technical source names with business-friendly names
+				    #"Renamed Columns" = Table.RenameColumns(#"Selected Equity Table", {{"Type", "Equity Movement"}, {"Account", "Equity Component"}, {"Balancetype", "Balance Type"}, {"AccountKey", "Account Key"}, {"Sort by type", "Movement Order"}, {"Sort by Account", "Component Order"}}),
+				    #"Changed Types" = Table.TransformColumnTypes(#"Renamed Columns", {{"Equity Movement", type text}, {"Equity Component", type text}, {"Balance Type", type text}, {"Account Key", Int64.Type}, {"Movement Order", Int64.Type}, {"Component Order", Int64.Type}})
+				in
+				    #"Changed Types"
+

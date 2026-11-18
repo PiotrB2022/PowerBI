@@ -1,2 +1,473 @@
 cultureInfo en-US
 
+	linguisticMetadata =
+			{
+			  "Version": "2.0.0",
+			  "Language": "en-US",
+			  "Entities": {
+			    "general_ledger.net_sales": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Net Sales"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Selected year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.net_sales_ly": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Net Sales (ly)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Prior year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.operating_expenses_increase": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Operating Expenses Increase"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Increase": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.gross_margin_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Gross Margin (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Gross Margin": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.ebitda_margin_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "EBITDA Margin (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "EBITDA Margin": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.operating_margin_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Operating Margin (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Operating Margin": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.net_margin_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Net Margin (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Net Margin": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "general_ledger.net_sales_growth_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "General Ledger",
+			          "ConceptualProperty": "Net Sales Growth (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Sales growth": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "income_statement_line.line": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Income Statement Line",
+			          "ConceptualProperty": "Line"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Line": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "income_statement_line.income_statement_amount": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Income Statement Line",
+			          "ConceptualProperty": "Income Statement Amount"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Selected year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "income_statement_line.income_statement_amount_ly": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Income Statement Line",
+			          "ConceptualProperty": "Income Statement Amount (ly)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Prior year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "income_statement_line.income_statement_change_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Income Statement Line",
+			          "ConceptualProperty": "Income Statement Change (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Change": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "income_statement_line.income_statement_share_of_sales_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Income Statement Line",
+			          "ConceptualProperty": "Income Statement Share of Sales (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "% of sales": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "equity_statement.equity_movement": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Equity Statement",
+			          "ConceptualProperty": "Equity Movement"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Movement": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "equity_statement.equity_statement_amount": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Equity Statement",
+			          "ConceptualProperty": "Equity Statement Amount"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Amount": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "balance_sheet_line.line": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Balance Sheet Line",
+			          "ConceptualProperty": "Line"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Line": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "balance_sheet_line.balance_sheet_amount": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Balance Sheet Line",
+			          "ConceptualProperty": "Balance Sheet Amount"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Selected year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "balance_sheet_line.balance_sheet_amount_ly": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Balance Sheet Line",
+			          "ConceptualProperty": "Balance Sheet Amount (ly)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Prior year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "balance_sheet_line.balance_sheet_change_": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Balance Sheet Line",
+			          "ConceptualProperty": "Balance Sheet Change (%)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Change": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "cash_flow_statement.cash_flow_section": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Cash Flow Statement",
+			          "ConceptualProperty": "Cash Flow Section"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Line": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "cash_flow_statement.cash_flow_amount": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Cash Flow Statement",
+			          "ConceptualProperty": "Cash Flow Amount"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Selected year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "cash_flow_statement.cash_flow_amount_ly": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "Cash Flow Statement",
+			          "ConceptualProperty": "Cash Flow Amount (ly)"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Prior year": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    }
+			  }
+			}
+		contentType: json
+

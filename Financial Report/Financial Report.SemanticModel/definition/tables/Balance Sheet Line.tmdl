@@ -1,0 +1,86 @@
+/// Layout of the balance sheet on the Balance Sheet page. One row per statement line. No relationships, because the measures in this table pick the line by its order.
+table 'Balance Sheet Line'
+	lineageTag: 279881b6-a877-415e-9e7b-367024df21a3
+
+	/// Closing balance of the balance sheet line in the current row. Blank outside a single line.
+	measure 'Balance Sheet Amount' =
+			SWITCH(
+			    SELECTEDVALUE('Balance Sheet Line'[Line Order]),
+			    1, [Current Assets],
+			    2, CALCULATE([Closing Balance], 'Account'[Subclass Detail] = "Non-Current Assets"),
+			    3, [Total Assets],
+			    4, [Current Liabilities],
+			    5, CALCULATE([Closing Balance], 'Account'[Subclass Detail] = "Long Term Liabilities"),
+			    6, [Total Liabilities],
+			    7, CALCULATE([Closing Balance], 'Account'[Subclass Detail] = "Share Capital"),
+			    8, CALCULATE([Closing Balance], 'Account'[Subclass Detail] = "Retained Earnings"),
+			    9, [Total Equity],
+			    10, [Total Liabilities and Equity]
+			)
+		formatString: #,##0
+		lineageTag: 589a2c7f-6e27-4402-9cd6-dcf8ddf8e41b
+
+	/// Closing balance of the balance sheet line at the end of the same period one year earlier.
+	measure 'Balance Sheet Amount (ly)' = CALCULATE([Balance Sheet Amount], SAMEPERIODLASTYEAR('Date'[Date]))
+		formatString: #,##0
+		lineageTag: 35698b4f-4d3b-4540-9973-9c2a825444c2
+
+	/// Change in the balance sheet line against one year earlier.
+	measure 'Balance Sheet Change (%)' =
+			VAR _current = [Balance Sheet Amount]
+			VAR _prior = [Balance Sheet Amount (ly)]
+			RETURN
+			    DIVIDE(_current - _prior, ABS(_prior))
+		formatString: 0.00%
+		lineageTag: f879d798-c3df-4196-a4cd-b235816b8eb3
+
+	/// Row background for the balance sheet matrix. Subtotal lines are tinted.
+	measure 'Balance Sheet Row Color' = IF(SELECTEDVALUE('Balance Sheet Line'[Is Subtotal]) = "Yes", "#F3F5F8", "#FFFFFF")
+		isHidden
+		lineageTag: 0bd84c22-fdb9-4add-8537-f31c8fdec753
+
+	/// Balance sheet line shown in the statement matrix.
+	column Line
+		lineageTag: 5b44d908-ec5d-4999-b1e5-798ad70ab93c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Line]
+		sortByColumn: 'Line Order'
+
+	/// Position of the line in the balance sheet.
+	column 'Line Order'
+		isHidden
+		lineageTag: cd8333ec-6a2a-46ea-a2ff-a92001ffae2d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Line Order]
+
+	/// Yes for subtotal lines, which get a tinted row.
+	column 'Is Subtotal'
+		isHidden
+		lineageTag: 46f8cb40-f264-4336-b6ae-f04e27741d1e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Is Subtotal]
+
+	partition 'Balance Sheet Line' = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "Line", STRING,
+				    "Line Order", INTEGER,
+				    "Is Subtotal", STRING,
+				    {
+				        { "Current Assets", 1, "No" },
+				        { "Non-Current Assets", 2, "No" },
+				        { "Total Assets", 3, "Yes" },
+				        { "Current Liabilities", 4, "No" },
+				        { "Long Term Liabilities", 5, "No" },
+				        { "Total Liabilities", 6, "Yes" },
+				        { "Share Capital", 7, "No" },
+				        { "Retained Earnings", 8, "No" },
+				        { "Total Equity", 9, "Yes" },
+				        { "Total Liabilities and Equity", 10, "Yes" }
+				    }
+				)
+
